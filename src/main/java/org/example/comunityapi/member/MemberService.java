@@ -7,8 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class MemberService {
 
+public class MemberService {
     private final MemberRepository memberRepository;
 
     // 회원가입 비즈니스 로직
@@ -33,7 +33,7 @@ public class MemberService {
         // 4. 비밀번호 암호화 (추후 Spring Security 적용 시 암호화 로직 추가 예정)
         String encodedPassword = request.getPassword();
 
-        // 5. DTO를 엔티티로 변환 후 DB에 저장
+        // 5. DTO를 엔터티로 변환 후 DB에 저장
         Member member = request.toEntity(encodedPassword);
         Member savedMember = memberRepository.save(member);
 
