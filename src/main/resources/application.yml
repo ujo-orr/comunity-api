@@ -5,30 +5,6 @@ spring:
     active: local
 
 ---
-# H2 DB
-spring:
-  config:
-    activate:
-      on-profile: local
-  datasource:
-    driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:communitydb;MODE=MySQL;DB_CLOSE_DELAY=-1
-    username: sa
-    password: 950511
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        default_batch_fetch_size: 100
-
----
 # MySQL DB
 spring:
   config:
@@ -43,3 +19,29 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+---
+# Docker
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/community?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
