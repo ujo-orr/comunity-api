@@ -38,6 +38,13 @@ public class Member {
     @Column(nullable = false)
     private Role role;
 
+    // 소프트 딜리트 비즈니스 메서드
+    @Column(nullable = false)
+    private boolean deleted = false; // 기본값 false (삭제되지 않음)
+    public void deleteAccount() {
+        this.deleted = true;
+    }
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;

@@ -78,6 +78,7 @@ public class MemberService {
         member.updateProfile(request.getNickname(), request.getPhoneNumber(), encodedPassword);
     }
 
+    /*
     @Transactional
     public void deleteMemberByEmail(String email, MemberDeleteRequest request) {
         // 1. 삭제할 대상 회원 조회
@@ -89,5 +90,22 @@ public class MemberService {
         }
         // 3. 회원 DB 삭제
         memberRepository.delete(member); // 또는 memberRepository.deleteById(member.getId());
+    }
+     */
+
+    @Transactional
+    public void deleteMemberByEmail(String email, MemberDeleteRequest request) {
+        // 1. 삭제되지 않은 회원 조회
+        Member member = memberRepository.findByEmailAndDeletedFalse(email)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다. email=" + email));
+
+        // 2. 비밀번호 확인
+        if (!member.getPassword().equals(request.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        // 3. Soft Delete 처리 (JPA Dirty Checking으로 UPDATE 쿼리 발생)
+        // 실제 DB에는 DELETE 쿼리가 아닌 'UPDATE member SET deleted = true ...' 쿼리가 나갑니다.
+        member.deleteAccount();
     }
 }
