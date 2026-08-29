@@ -55,7 +55,7 @@ public class Member {
     }
 
     // 회원 정보 수정 비즈니스 메서드
-    public void updateNickname(String nickname, String password, String phoneNumber) {
+    public void updateProfile(String nickname, String password, String phoneNumber) {
         this.nickname = nickname;
         this.password = password;
         this.phoneNumber = phoneNumber;
