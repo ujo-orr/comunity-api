@@ -1,6 +1,8 @@
 package org.example.comunityapi.member;
 
 import lombok.RequiredArgsConstructor;
+import org.example.comunityapi.global.security.JwtTokenProvider;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,6 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberService {
     private final MemberRepository memberRepository;
     private final MemberWithdrawalRepository memberWithdrawalRepository;
+
+    // JWT 의존성
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
     // 회원가입
     @Transactional
@@ -57,7 +63,7 @@ public class MemberService {
 
     public MemberResponse getMemberInfoByEmail(String email) {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException(email + "은(는) 존재하지 않는 전화번호 입니다."));
+                .orElseThrow(() -> new IllegalArgumentException(email + "은(는) 존재하지 않는 이메일 입니다."));
         return new MemberResponse(member);
     }
 
@@ -82,6 +88,7 @@ public class MemberService {
         member.updateProfile(request.getNickname(), request.getPhoneNumber(), encodedPassword);
     }
 
+    // 삭제
     @Transactional
     public void withdrawMember(String email, MemberWithdrawalRequest request) {
         // 1. 회원 조회
@@ -89,7 +96,7 @@ public class MemberService {
                 .orElseThrow(() -> new IllegalArgumentException(email + "은(는) 존재하지 않는 회원입니다."));
 
         // 2. 비밀번호 검증 (한 번 더 확인)
-        if (!member.getPassword().equals(request.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
@@ -101,6 +108,7 @@ public class MemberService {
         memberRepository.delete(member);
     }
 
+    // 로그인
     @Transactional
     public String login(MemberLoginRequest request) {
         Member member = memberRepository.findByEmail(request.getEmail())

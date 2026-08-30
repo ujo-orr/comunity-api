@@ -1,18 +1,19 @@
 package org.example.comunityapi.global.security;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
 import java.util.Date;
 
 @Component
 public class JwtTokenProvider {
 
-    private final Key key;
+    private final SecretKey key;
     private final long expirationMs;
 
     public JwtTokenProvider(
@@ -28,27 +29,30 @@ public class JwtTokenProvider {
         Date validity = new Date(now.getTime() + expirationMs);
 
         return Jwts.builder()
-                .setSubject(email) // 토큰 주인 식별자 (이메일)
-                .setIssuedAt(now)
-                .setExpiration(validity)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .subject(email) // setSubject -> subject
+                .issuedAt(now)   // setIssuedAt -> issuedAt
+                .expiration(validity) // setExpiration -> expiration
+                .signWith(key)   // 알고리즘 자동 추론
                 .compact();
     }
 
     // 2. 토큰에서 이메일(Subject) 추출
     public String getEmailFromToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
+        return Jwts.parser()
+                .verifyWith(key)
                 .build()
-                .parseClaimsJws(token)
-                .getBody()
+                .parseSignedClaims(token)
+                .getPayload() // getBody -> getPayload
                 .getSubject();
     }
 
     // 3. 토큰 유효성 검증
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
