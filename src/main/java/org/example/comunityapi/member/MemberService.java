@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 public class MemberService {
     private final MemberRepository memberRepository;
+    private final MemberWithdrawalRepository memberWithdrawalRepository;
 
     // 회원가입
     @Transactional
@@ -78,34 +79,22 @@ public class MemberService {
         member.updateProfile(request.getNickname(), request.getPhoneNumber(), encodedPassword);
     }
 
-    /*
     @Transactional
-    public void deleteMemberByEmail(String email, MemberDeleteRequest request) {
-        // 1. 삭제할 대상 회원 조회
+    public void withdrawMember(String email, MemberDeleteRequest request) {
+        // 1. 회원 조회
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException(email + "은(는) 존재하지 않는 회원입니다."));
-        // 2. 비밀번호 일치 여부 확인 (추후 Security 적용 시 passwordEncoder.matches 사용)
-        if (!member.getPassword().equals(request.getPassword())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
-        }
-        // 3. 회원 DB 삭제
-        memberRepository.delete(member); // 또는 memberRepository.deleteById(member.getId());
-    }
-     */
-
-    @Transactional
-    public void deleteMemberByEmail(String email, MemberDeleteRequest request) {
-        // 1. 삭제되지 않은 회원 조회
-        Member member = memberRepository.findByEmailAndDeletedFalse(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다. email=" + email));
 
-        // 2. 비밀번호 확인
+        // 2. 비밀번호 검증 (한 번 더 확인)
         if (!member.getPassword().equals(request.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-        // 3. Soft Delete 처리 (JPA Dirty Checking으로 UPDATE 쿼리 발생)
-        // 실제 DB에는 DELETE 쿼리가 아닌 'UPDATE member SET deleted = true ...' 쿼리가 나갑니다.
-        member.deleteAccount();
+        // 3. 삭제 유예/보관 테이블에 INSERT
+        MemberWithdrawal withdrawal = new MemberWithdrawal(member.getEmail(), 90);
+        memberWithdrawalRepository.save(withdrawal);
+
+        // 4. 운영 member 테이블에서 해당 회원만 DELETE (Hard Delete)
+        memberRepository.delete(member);
     }
 }

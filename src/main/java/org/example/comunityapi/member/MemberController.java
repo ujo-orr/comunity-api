@@ -38,7 +38,7 @@ public class MemberController {
         return ResponseEntity.ok(response);
     }
 
-    // 이메일 기준 회원 정보 수정 API (PUT /api/members/email/test@example.com)
+    // 이메일 기준 회원 정보 수정 API
     @PutMapping("/email/{email}")
     public ResponseEntity<Void> updateMemberByEmail(
             @PathVariable String email,
@@ -48,14 +48,13 @@ public class MemberController {
         return ResponseEntity.ok().build();
     }
 
-    /* 회원 탈퇴 API (DELETE /api/members/email/test@example.com)
+    // 회원 탈퇴 API
     @DeleteMapping("/email/{email}")
     public ResponseEntity<Void> deleteMemberByEmail(
             @PathVariable String email,
             @RequestBody MemberDeleteRequest request) {
 
-        memberService.deleteMemberByEmail(email, request);
+        memberService.withdrawMember(email, request);
         return ResponseEntity.ok().build();
     }
-     */
 }
