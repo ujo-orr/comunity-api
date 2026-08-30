@@ -52,7 +52,7 @@ public class MemberController {
     @DeleteMapping("/email/{email}")
     public ResponseEntity<Void> deleteMemberByEmail(
             @PathVariable String email,
-            @RequestBody MemberDeleteRequest request) {
+            @RequestBody MemberWithdrawalRequest request) {
 
         memberService.withdrawMember(email, request);
         return ResponseEntity.ok().build();

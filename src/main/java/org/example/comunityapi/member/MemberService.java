@@ -80,10 +80,10 @@ public class MemberService {
     }
 
     @Transactional
-    public void withdrawMember(String email, MemberDeleteRequest request) {
+    public void withdrawMember(String email, MemberWithdrawalRequest request) {
         // 1. 회원 조회
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다. email=" + email));
+                .orElseThrow(() -> new IllegalArgumentException(email + "은(는) 존재하지 않는 회원입니다."));
 
         // 2. 비밀번호 검증 (한 번 더 확인)
         if (!member.getPassword().equals(request.getPassword())) {
