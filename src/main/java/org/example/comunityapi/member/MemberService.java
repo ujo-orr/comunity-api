@@ -42,16 +42,19 @@ public class MemberService {
                 .orElseThrow(() -> new IllegalArgumentException(id + "은(는) 존재하지 않는 회원 입니다."));
         return new MemberResponse(member);
     }
+
     public MemberResponse getMemberInfoByNickname(String nickname) {
         Member member = memberRepository.findByNickname(nickname)
                 .orElseThrow(() -> new IllegalArgumentException(nickname + "은(는) 존재하지 않는 닉네임 입니다."));
         return new MemberResponse(member);
     }
+
     public MemberResponse getMemberInfoByPhoneNumber(String phoneNumber) {
         Member member = memberRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new IllegalArgumentException(phoneNumber + "은(는) 존재하지 않는 전화번호 입니다."));
         return new MemberResponse(member);
     }
+
     public MemberResponse getMemberInfoByEmail(String email) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException(email + "은(는) 존재하지 않는 전화번호 입니다."));
@@ -96,5 +99,19 @@ public class MemberService {
 
         // 4. 운영 member 테이블에서 해당 회원만 DELETE (Hard Delete)
         memberRepository.delete(member);
+    }
+
+    @Transactional
+    public String login(MemberLoginRequest request) {
+        Member member = memberRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 이메일입니다."));
+
+        // PasswordEncoder로 암호화된 비밀번호 비교
+        if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        // 로그인 성공 시 JWT 발급
+        return jwtTokenProvider.createToken(member.getEmail());
     }
 }

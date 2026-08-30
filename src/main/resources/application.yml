@@ -3,6 +3,8 @@ spring:
     name: comunity-api
   profiles:
     active: local
+    include :
+      - secret
 
 ---
 # H2 DB
@@ -43,3 +45,9 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+---
+
+#jwt:
+#  secret: openssl rand -base64 64
+#  expiration-ms: 3600000

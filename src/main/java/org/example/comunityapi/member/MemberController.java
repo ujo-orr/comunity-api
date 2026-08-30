@@ -3,6 +3,7 @@ package org.example.comunityapi.member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -48,6 +49,7 @@ public class MemberController {
         return ResponseEntity.ok().build();
     }
 
+    /* 관리자 권한?
     // 회원 탈퇴 API
     @DeleteMapping("/email/{email}")
     public ResponseEntity<Void> deleteMemberByEmail(
@@ -57,4 +59,27 @@ public class MemberController {
         memberService.withdrawMember(email, request);
         return ResponseEntity.ok().build();
     }
+    */
+
+
+        // 로그인 (토큰 반환)
+        @PostMapping("/login")
+        public ResponseEntity<String> login(@RequestBody MemberLoginRequest request) {
+            String token = memberService.login(request);
+            return ResponseEntity.ok(token);
+        }
+
+        // 본인 회원 탈퇴 (URL에 이메일 없이, 헤더의 토큰 정보 활용)
+        @PostMapping("/withdraw")
+        public ResponseEntity<Void> withdrawMember(
+                Authentication authentication, // Spring Security의 Authentication 객체를 직접 주입받음
+                @RequestBody MemberWithdrawalRequest request) {
+
+            // authentication.getName()을 하면 Principal로 저장했던 email 문자열이 자동으로 반환
+            String email = authentication.getName();
+
+            memberService.withdrawMember(email, request);
+            return ResponseEntity.ok().build();
+        }
+
 }
