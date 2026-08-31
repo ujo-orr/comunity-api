@@ -3,6 +3,32 @@ spring:
     name: comunity-api
   profiles:
     active: local
+    include :
+      - secret
+
+---
+# H2 DB
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:communitydb;MODE=MySQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password: 950511
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 100
 
 ---
 # MySQL DB
@@ -45,3 +71,9 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+
+---
+
+#jwt:
+#  secret: openssl rand -base64 64
+#  expiration-ms: 3600000

@@ -38,6 +38,13 @@ public class Member {
     @Column(nullable = false, length = 20)
     private Role role;
 
+    // 소프트 딜리트 비즈니스 메서드
+    @Column(nullable = false)
+    private boolean deleted = false; // 기본값 false (삭제되지 않음)
+    public void deleteAccount() {
+        this.deleted = true;
+    }
+
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -56,7 +63,7 @@ public class Member {
     }
 
     // 회원 정보 수정 비즈니스 메서드
-    public void updateNickname(String nickname, String password, String phoneNumber) {
+    public void updateProfile(String nickname, String password, String phoneNumber) {
         this.nickname = nickname;
         this.password = password;
         this.phoneNumber = phoneNumber;
