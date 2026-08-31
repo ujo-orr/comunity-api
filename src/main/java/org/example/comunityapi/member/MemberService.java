@@ -33,8 +33,8 @@ public class MemberService {
         if (memberRepository.existsByPhoneNumber(request.getPhoneNumber())) {
             throw new IllegalArgumentException("이미 등록된 전화번호입니다.");
         }
-        // 4. 비밀번호 암호화 (추후 Spring Security 적용 시 암호화 로직 추가 예정)
-        String encodedPassword = request.getPassword();
+        // 4. 비밀번호 암호화
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
         // 5. DTO를 엔터티로 변환 후 DB에 저장
         Member member = request.toEntity(encodedPassword);
         Member savedMember = memberRepository.save(member);

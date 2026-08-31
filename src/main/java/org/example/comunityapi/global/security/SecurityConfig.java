@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,20 +19,35 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
 
+    // 비밀번호를 DB에 안전하게 Bcrypt 단방향 암호화해주는 Bean 등록[cite: 1]
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // 비밀번호 암호화용 Encoder
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // REST API이므로 csrf 비활성화
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 사용 안 함
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/members/signup", "/api/members/login").permitAll() // 회원가입, 로그인은 누구나 접근 허용
-                        .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
+                // REST API이므로 CSRF보호(쿠키 기반) 기능을 끕니다.[cite: 1]
+                .csrf(csrf -> csrf.disable())
+
+                // H2 DB 콘솔의 Frame 웹 구조 표시를 허용합니다.
+                .headers(headers -> headers
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
                 )
+
+                // 세션을 사용하지 않고 JWT 방식(Stateless)을 사용하겠다고 선언합니다.[cite: 1]
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // URL별 접근 권한 설정[cite: 1]
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/h2-console/**").permitAll()                         // H2 콘솔 자유 접속 허용
+                        .requestMatchers("/api/members/signup", "/api/members/login").permitAll() // 회원가입, 로그인은 누구나 접근 허용[cite: 1]
+                        .anyRequest().authenticated()                                          // 그 외 모든 API 요청은 인증 필요[cite: 1]
+                )
+
+                // 💡 Spring Security의 기본 로그인 필터(UsernamePasswordAuthenticationFilter) "앞"에
+                // 위에서 만든 JwtAuthenticationFilter를 배치하여 먼저 검문받도록 등록합니다.[cite: 1]
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

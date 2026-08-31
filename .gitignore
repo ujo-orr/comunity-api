@@ -26,6 +26,7 @@ out/
 .DS_Store
 *.env
 application-secret.yml
+app
 !**/src/main/**/out/
 !**/src/test/**/out/
 

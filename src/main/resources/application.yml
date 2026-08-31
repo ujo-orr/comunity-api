@@ -1,13 +1,13 @@
 spring:
   application:
-    name: comunity-api
+    name: community-api
   profiles:
     active: local
     include :
       - secret
 
 ---
-# H2 DB
+# H2 DB (테스트용) JDBC URL : jdbc:h2:mem:communitydb;MODE=MySQL;DB_CLOSE_DELAY=-1
 spring:
   config:
     activate:
@@ -29,9 +29,11 @@ spring:
       hibernate:
         format_sql: true
         default_batch_fetch_size: 100
+  flyway:
+    enabled: false # H2 로컬 테스트 끝나면 켜기
 
 ---
-# MySQL DB
+# MySQL DB (배포용)
 spring:
   config:
     activate:
@@ -49,6 +51,9 @@ spring:
 ---
 # Docker
 spring:
+  config:
+    activate:
+      on-profile: docker
   datasource:
     url: jdbc:mysql://localhost:3306/community?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: root
@@ -71,9 +76,3 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
-
----
-
-#jwt:
-#  secret: openssl rand -base64 64
-#  expiration-ms: 3600000
