@@ -32,18 +32,26 @@ public class MemberController {
         MemberResponse response = memberService.getMemberInfoByNickname(nickname);
         return ResponseEntity.ok(response);
     }
-    // 3. 전화번호 기준 회원 조회 API
-    @GetMapping("/phoneNumber/{phoneNumber}")
-    public ResponseEntity<MemberResponse> getMemberInfoByPhoneNumber(@PathVariable String phoneNumber) {
-        MemberResponse response = memberService.getMemberInfoByPhoneNumber(phoneNumber);
+
+    // 내 정보 조회 API (토큰)
+    @GetMapping("/me")
+    public ResponseEntity<MemberResponse> getMyInfo(Authentication authentication) {
+        // JwtAuthenticationFilter에서 저장한 email 추출 (authentication.getName())
+        String email = authentication.getName();
+
+        // 이메일 기반 회원 정보 조회 (Service에 이메일 조회 메서드가 구현되어 있어야 함)
+        MemberResponse response = memberService.getMemberInfoByEmail(email);
         return ResponseEntity.ok(response);
     }
 
-    // 이메일 기준 회원 정보 수정 API
-    @PutMapping("/email/{email}")
-    public ResponseEntity<Void> updateMemberByEmail(
-            @PathVariable String email,
+    // 내 정보 수정 API (토큰)
+    @PutMapping("/me")
+    public ResponseEntity<Void> updateMyInfo(
+            Authentication authentication,
             @RequestBody MemberUpdateRequest request) {
+
+        // 토큰 속에 들어있는 이메일 추출
+        String email = authentication.getName();
 
         memberService.updateMemberByEmail(email, request);
         return ResponseEntity.ok().build();
@@ -62,20 +70,19 @@ public class MemberController {
     */
 
 
-        // 로그인 (토큰 반환)
+        // 로그인 API (토큰)
         @PostMapping("/login")
         public ResponseEntity<String> login(@RequestBody MemberLoginRequest request) {
             String token = memberService.login(request);
             return ResponseEntity.ok(token);
         }
 
-        // 본인 회원 탈퇴 (URL에 이메일 없이, 헤더의 토큰 정보 활용)
-        @PostMapping("/withdraw")
+        // 본인 회원 탈퇴 (토큰)
+        @DeleteMapping("/me")
         public ResponseEntity<Void> withdrawMember(
-                Authentication authentication, // Spring Security의 Authentication 객체를 직접 주입받음
+                Authentication authentication,
                 @RequestBody MemberWithdrawalRequest request) {
 
-            // authentication.getName()을 하면 Principal로 저장했던 email 문자열이 자동으로 반환
             String email = authentication.getName();
 
             memberService.withdrawMember(email, request);

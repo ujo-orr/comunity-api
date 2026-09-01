@@ -2,6 +2,7 @@ package org.example.comunityapi.member;
 
 import lombok.RequiredArgsConstructor;
 import org.example.comunityapi.global.security.JwtTokenProvider;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,15 +56,9 @@ public class MemberService {
         return new MemberResponse(member);
     }
 
-    public MemberResponse getMemberInfoByPhoneNumber(String phoneNumber) {
-        Member member = memberRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new IllegalArgumentException(phoneNumber + "은(는) 존재하지 않는 전화번호 입니다."));
-        return new MemberResponse(member);
-    }
-
     public MemberResponse getMemberInfoByEmail(String email) {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException(email + "은(는) 존재하지 않는 이메일 입니다."));
+                .orElseThrow(() -> new UsernameNotFoundException("인증 정보에 해당하는 회원을 찾을 수 없습니다."));
         return new MemberResponse(member);
     }
 

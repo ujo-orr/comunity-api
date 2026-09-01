@@ -3,6 +3,7 @@ package org.example.comunityapi.global.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
@@ -41,9 +42,18 @@ public class SecurityConfig {
 
                 // URL별 접근 권한 설정[cite: 1]
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/h2-console/**").permitAll()                         // H2 콘솔 자유 접속 허용
-                        .requestMatchers("/api/members/signup", "/api/members/login").permitAll() // 회원가입, 로그인은 누구나 접근 허용[cite: 1]
-                        .anyRequest().authenticated()                                          // 그 외 모든 API 요청은 인증 필요[cite: 1]
+                        .requestMatchers("/h2-console/**").permitAll()
+
+                        // 💡 Swagger UI 접속 경로 및 API 명세서 JSON 경로 허용 추가
+                        .requestMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+
+                        .requestMatchers("/api/members/signup", "/api/members/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/members/search/**").permitAll()
+                        .anyRequest().authenticated()
                 )
 
                 // 💡 Spring Security의 기본 로그인 필터(UsernamePasswordAuthenticationFilter) "앞"에
