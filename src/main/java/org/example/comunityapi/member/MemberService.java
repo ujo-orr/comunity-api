@@ -99,7 +99,7 @@ public class MemberService {
         MemberWithdrawal withdrawal = new MemberWithdrawal(member.getEmail(), 90);
         memberWithdrawalRepository.save(withdrawal);
 
-        // 4. 운영 member 테이블에서 해당 회원만 DELETE (Hard Delete)
+        // 4. member 테이블에서 해당 회원만 DELETE (Hard Delete)
         memberRepository.delete(member);
     }
 

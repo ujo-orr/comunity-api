@@ -1,5 +1,6 @@
 package org.example.comunityapi.member;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,18 +16,19 @@ public class MemberController {
 
     // 회원가입 API
     @PostMapping("/signup")
-    public ResponseEntity<Long> signUp(@RequestBody MemberSignUpRequest request) {
+    public ResponseEntity<Long> signUp(
+            @Valid @RequestBody MemberSignUpRequest request) {
         Long memberId = memberService.signUp(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(memberId);
     }
 
-    // 1. ID 기준 회원 조회 API
+    // ID 기준 회원 조회 API
     @GetMapping("/{id}")
     public ResponseEntity<MemberResponse> getMemberInfo(@PathVariable Long id) {
         MemberResponse response = memberService.getMemberInfo(id);
         return ResponseEntity.ok(response);
     }
-    // 2. 닉네임 기준 회원 조회 API
+    // 닉네임 기준 회원 조회 API
     @GetMapping("/nickname/{nickname}")
     public ResponseEntity<MemberResponse> getMemberInfoByNickname(@PathVariable String nickname) {
         MemberResponse response = memberService.getMemberInfoByNickname(nickname);
@@ -72,7 +74,7 @@ public class MemberController {
 
         // 로그인 API (토큰)
         @PostMapping("/login")
-        public ResponseEntity<String> login(@RequestBody MemberLoginRequest request) {
+        public ResponseEntity<String> login(@Valid @RequestBody MemberLoginRequest request) {
             String token = memberService.login(request);
             return ResponseEntity.ok(token);
         }
