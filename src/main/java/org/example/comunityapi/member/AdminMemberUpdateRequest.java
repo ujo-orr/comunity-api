@@ -5,8 +5,9 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class MemberUpdateRequest {
+public class AdminMemberUpdateRequest {
     private String nickname;
     private String phoneNumber;
     private String password;
+    private Role role;
 }

@@ -31,7 +31,7 @@ public class SwaggerConfig {
                 .info(new Info()
                         .title("Community API Document")
                         .description("커뮤니티 프로젝트 API 명세서")
-                        .version("v1.0.0"))
+                        .version("v1.1.0"))
                 .addSecurityItem(securityRequirement)
                 .components(components);
     }

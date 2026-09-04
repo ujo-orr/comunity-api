@@ -51,7 +51,6 @@ public class MemberSignUpRequest {
                 .password(encodedPassword)
                 .nickname(this.nickname)
                 .phoneNumber(this.phoneNumber)
-                .role(Role.USER)
                 .build();
     }
 }

@@ -3,11 +3,13 @@ spring:
     name: community-api
   profiles:
     active: local
-    include :
-      - secret
   batch:
     job:
       enabled: false # 서버 실행시 batch 자동실행 방지
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration-ms: 3600000
 
 ---
 # H2 DB (테스트용) JDBC URL : jdbc:h2:mem:communitydb;MODE=MySQL;DB_CLOSE_DELAY=-1
@@ -19,7 +21,7 @@ spring:
     driver-class-name: org.h2.Driver
     url: jdbc:h2:mem:communitydb;MODE=MySQL;DB_CLOSE_DELAY=-1
     username: sa
-    password: 950511
+    password:
   h2:
     console:
       enabled: true
@@ -43,13 +45,16 @@ spring:
       on-profile: prod
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/community_db?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: root
-    password: your_password
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: validate
+    show-sql: false
+  h2:
+    console:
+      enabled: false
 
 ---
 # Docker

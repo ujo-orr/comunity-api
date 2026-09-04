@@ -52,13 +52,23 @@ public class Member {
         this.password = password;
         this.phoneNumber = phoneNumber;
         this.nickname = nickname;
-        this.role = Role.USER;
+        this.role = role != null ? role : Role.USER;
     }
 
     // 회원 정보 수정 비즈니스 메서드
-    public void updateProfile(String nickname, String password, String phoneNumber) {
-        this.nickname = nickname;
-        this.password = password;
-        this.phoneNumber = phoneNumber;
+    public void updateProfile(String nickname, String phoneNumber, String newPassword) {
+        if (org.springframework.util.StringUtils.hasText(nickname)) {
+            this.nickname = nickname;
+        }
+        if (org.springframework.util.StringUtils.hasText(phoneNumber)) {
+            this.phoneNumber = phoneNumber;
+        }
+        if (org.springframework.util.StringUtils.hasText(newPassword)) {
+            this.password = newPassword;
+        }
+    }
+
+    public void changeRole(Role newRole) {
+        this.role = newRole;
     }
 }

@@ -1,6 +1,7 @@
 package org.example.comunityapi.global.batch;
 
 import lombok.RequiredArgsConstructor;
+import org.example.comunityapi.member.MemberWithdrawalRepository;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
@@ -11,12 +12,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import java.time.LocalDateTime;
+
 @Configuration
 @RequiredArgsConstructor
 public class WithdrawalBatchConfig {
 
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
+    private final MemberWithdrawalRepository memberWithdrawalRepository;
 
     @Bean
     public Job cleanupJob() {
@@ -29,7 +33,8 @@ public class WithdrawalBatchConfig {
     public Step cleanupStep() {
         return new StepBuilder("cleanupWithdrawalStep", jobRepository)
                 .tasklet((contribution, chunkContext) -> {
-                    // 유예 기간 만료 데이터 삭제 또는 이관 로직 수행
+                    memberWithdrawalRepository.deleteByExpireAtBefore(LocalDateTime.now());
+
                     return RepeatStatus.FINISHED;
                 }, transactionManager)
                 .build();
