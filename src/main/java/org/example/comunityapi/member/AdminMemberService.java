@@ -2,6 +2,8 @@ package org.example.comunityapi.member;
 
 import lombok.RequiredArgsConstructor;
 
+import org.example.comunityapi.global.error.BusinessException;
+import org.example.comunityapi.global.error.ErrorCode;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,9 +46,9 @@ public class AdminMemberService {
     @Transactional
     public void updateRole(Long id, Role role) {
         Member member = memberRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        // Member 엔티티 내부 변경 메서드 호출 (예: member.changeRole(role);)
+        // Member 엔티티 내부 변경 메서드 호출
         member.changeRole(role);
     }
 
@@ -55,21 +57,21 @@ public class AdminMemberService {
     public void cancelWithdrawal(String email, MemberWithdrawalRequest request) {
         // 1. 탈퇴 유예 테이블에서 해당 이메일의 탈퇴 신청 기록 조회
         MemberWithdrawal withdrawal = memberWithdrawalRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("탈퇴 유예 중인 계정이 아니거나 존재하지 않는 이메일입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 2. 비밀번호 재검증 (유예 테이블에 보관된 암호화 비밀번호와 비교)
         if (!passwordEncoder.matches(request.getPassword(), withdrawal.getPassword())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
         // 3. 닉네임 중복 검사 (유예 기간 중 타인이 해당 닉네임으로 신규 가입했을 위험 방지)
         if (memberRepository.existsByNickname(withdrawal.getNickname())) {
-            throw new IllegalArgumentException("기존 닉네임이 이미 다른 사용자에 의해 사용 중입니다. 고객센터에 문의해주세요.");
+            throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
         }
 
         // 4. 전화번호 중복 검사
         if (memberRepository.existsByPhoneNumber(withdrawal.getPhoneNumber())) {
-            throw new IllegalArgumentException("기존 전화번호가 이미 등록되어 있습니다.");
+            throw new BusinessException(ErrorCode.DUPLICATE_PHONE_NUMBER);
         }
 
         // 5. Member 엔티티 복원 (Hard Delete 되었으므로 백업된 정보로 새로 생성, 새 Auto Increment ID 부여됨)
