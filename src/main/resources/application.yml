@@ -9,7 +9,7 @@ spring:
 
 jwt:
   secret: ${JWT_SECRET}
-  expiration-ms: 3600000
+  expiration-ms: 180000 # 한시간 3600000
 
 ---
 # H2 DB (테스트용) JDBC URL : jdbc:h2:mem:communitydb;MODE=MySQL;DB_CLOSE_DELAY=-1

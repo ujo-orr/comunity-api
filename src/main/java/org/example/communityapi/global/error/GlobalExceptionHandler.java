@@ -12,40 +12,54 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // DTO 유효성 검증 실패 (@Valid 에러)
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    protected ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        log.warn("handleMethodArgumentNotValidException", e);
-        ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, e.getBindingResult());
-        return ResponseEntity.status(ErrorCode.INVALID_INPUT_VALUE.getStatus()).body(response);
-    }
-
-    // 비즈니스 로직 예외 (Custom Exception 처리)
+    // BusinessException
     @ExceptionHandler(BusinessException.class)
-    protected ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
-        log.warn("handleBusinessException: {}", e.getMessage());
+    protected ResponseEntity<ErrorResponse> handleBusinessException(
+            BusinessException e
+    ) {
         ErrorCode errorCode = e.getErrorCode();
-        ErrorResponse response = ErrorResponse.of(errorCode);
-        return ResponseEntity.status(errorCode.getStatus()).body(response);
-    }
 
-    // 최상위 예외 (기타 예상치 못한 에러)
-    @ExceptionHandler(Exception.class)
-    protected ResponseEntity<ErrorResponse> handleException(Exception e) {
-        log.error("handleException", e); // 500 에러는 원인 파악을 위해 error 레벨로 로그
-        ErrorResponse response = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR);
-        return ResponseEntity.status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus()).body(response);
-    }
-
-    // 지원하지 않은 HTTP method 호출 할 경우 발생 (예: GET 요청에 POST로 호출)
-    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    protected ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupportedException(
-            HttpRequestMethodNotSupportedException e) {
-        log.error("handleHttpRequestMethodNotSupportedException", e);
-        ErrorCode errorCode = ErrorCode.METHOD_NOT_ALLOWED;
-        ErrorResponse response = ErrorResponse.of(errorCode);
         return ResponseEntity
                 .status(errorCode.getStatus())
+                .body(ErrorResponse.of(errorCode));
+    }
+
+    // @Valid 검증 실패 시
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    protected ResponseEntity<ErrorResponse> handleValidationException(
+            MethodArgumentNotValidException e
+    ) {
+        ErrorResponse response = ErrorResponse.of(
+                ErrorCode.INVALID_INPUT_VALUE,
+                e.getBindingResult()
+        );
+
+        return ResponseEntity
+                .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
                 .body(response);
+    }
+
+    // HTTP 메서드 호출 미스
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    protected ResponseEntity<ErrorResponse> handleMethodNotAllowedException(
+            HttpRequestMethodNotSupportedException e
+    ) {
+        ErrorCode errorCode = ErrorCode.METHOD_NOT_ALLOWED;
+
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(ErrorResponse.of(errorCode));
+    }
+
+    // 기타 예외
+    @ExceptionHandler(Exception.class)
+    protected ResponseEntity<ErrorResponse> handleException(Exception e) {
+        log.error("Unexpected exception", e);
+
+        ErrorCode errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
+
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(ErrorResponse.of(errorCode));
     }
 }

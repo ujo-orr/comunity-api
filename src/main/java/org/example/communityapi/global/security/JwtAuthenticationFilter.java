@@ -1,5 +1,7 @@
 package org.example.communityapi.global.security;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,6 +23,7 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 
     @Override
     protected void doFilterInternal(
@@ -30,20 +34,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = resolveToken(request);
 
-        if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
-            String email = jwtTokenProvider.getEmailFromToken(token);
+        if (StringUtils.hasText(token)) {
+            try {
+                // Claims를 한 번만 파싱한. 만료·위조·형식 오류는 JwtException으로 처리.
+                Claims claims = jwtTokenProvider.getClaimsFromToken(token);
+                String email = claims.getSubject();
+                String role = claims.get("role", String.class);
 
-            // 1. 토큰에서 Role(예: "ADMIN" 또는 "USER")을 추출
-            String role = jwtTokenProvider.getRoleFromToken(token);
+                List<GrantedAuthority> authorities = List.of(
+                        new SimpleGrantedAuthority("ROLE_" + role)
+                );
 
-            // 2. SimpleGrantedAuthority 객체 생성 (hasRole 검증을 위해 "ROLE_" 접두사 붙임)
-            List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(email, null, authorities);
 
-            // 3. 빈 리스트(Collections.emptyList()) 대신 authorities를 전달
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(email, null, authorities);
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } catch (JwtException | IllegalArgumentException e) {
+                // 필터 단계의 예외는 ControllerAdvice까지 가지 않으므로 401 응답을 직접 위임한다.
+                SecurityContextHolder.clearContext();
+                authenticationEntryPoint.commence(
+                        request,
+                        response,
+                        new InsufficientAuthenticationException("유효하지 않거나 만료된 JWT입니다.", e)
+                );
+                return;
+            }
         }
 
         filterChain.doFilter(request, response);

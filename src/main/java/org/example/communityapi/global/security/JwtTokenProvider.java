@@ -48,30 +48,30 @@ public class JwtTokenProvider {
 
     // 2. 토큰에서 이메일(Subject) 추출
     public String getEmailFromToken(String token) {
-        return getClaims(token).getSubject();
+        return getClaimsFromToken(token).getSubject();
     }
 
     // 3. 토큰에서 권한(Role) 추출 메서드 👈 [새로 추가]
     public String getRoleFromToken(String token) {
-        return getClaims(token).get("role", String.class);
+        return getClaimsFromToken(token).get("role", String.class);
     }
 
-    // 4. 토큰 유효성 검증
-    public boolean validateToken(String token) {
-        try {
-            getClaims(token);
-            return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
-        }
-    }
-
-    // 공통 Claims 파싱 내부 메서드
-    private Claims getClaims(String token) {
+    // 토큰을 한 번 파싱해 Claims를 반환한다. 만료·위조 토큰은 JwtException을 발생시킨다.
+    public Claims getClaimsFromToken(String token) {
         return Jwts.parser()
                 .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    // 4. 토큰 유효성 검증
+    public boolean validateToken(String token) {
+        try {
+            getClaimsFromToken(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
     }
 }

@@ -56,16 +56,20 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/members/signup", "/api/members/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/members/search/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
-                // 인증/ 인가 예외 핸들러
+                // 인증, 인가 예외 핸들러
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(authenticationEntryPoint) // 401 처리
                         .accessDeniedHandler(accessDeniedHandler)           // 403 처리
                 )
                 // Spring Security의 기본 로그인 필터(UsernamePasswordAuthenticationFilter) "앞"에
                 // 위에서 만든 JwtAuthenticationFilter를 배치하여 먼저 검문받도록 등록합니다.
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(
+                        new JwtAuthenticationFilter(jwtTokenProvider, authenticationEntryPoint),
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
     }
