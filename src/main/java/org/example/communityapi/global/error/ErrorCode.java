@@ -14,6 +14,8 @@ public enum ErrorCode {
 
     // 401 Unauthorized 로그인 실패
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A001", "아이디 또는 비밀번호가 올바르지 않습니다."),
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "A002", "인증이 필요하거나 유효하지 않은 토큰입니다."),
+    ACCESS_DENIED(HttpStatus.FORBIDDEN, "A003", "해당 리소스에 접근할 권한이 없습니다."),
 
     // 404 Not Found 회원 존재 X
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "존재하지 않는 회원입니다."),
