@@ -37,13 +37,6 @@ public class MemberSignUpRequest {
     )
     private  String nickname;
 
-    public MemberSignUpRequest(String email, String password, String phoneNumber, String nickname) {
-        this.email = email;
-        this.password = password;
-        this.phoneNumber = phoneNumber;
-        this.nickname = nickname;
-    }
-
     // DTO 기반 Member 엔터티 생성
     public Member toEntity(String encodedPassword) {
         return Member.builder()
