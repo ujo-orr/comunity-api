@@ -31,9 +31,9 @@ public class MemberController {
 
     // 내 정보 조회 API (토큰)
     @GetMapping("/me")
-    public ResponseEntity<MemberResponse> getMyInfo(@AuthenticationPrincipal String email) {
+    public ResponseEntity<MyProfileResponse> getMyInfo(@AuthenticationPrincipal String email) {
         // Service에서 MemberResponse를 반환받도록 호출
-        MemberResponse response = memberService.getMyProfileByEmail(email);
+        MyProfileResponse response = memberService.getMyProfileByEmail(email);
         return ResponseEntity.ok(response);
     }
 

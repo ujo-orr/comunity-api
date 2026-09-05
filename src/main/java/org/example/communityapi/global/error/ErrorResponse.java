@@ -1,6 +1,8 @@
 package org.example.communityapi.global.error;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.validation.BindingResult;
@@ -9,6 +11,7 @@ import java.util.List;
 
 @Getter
 @Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL) // errors 필드가 null이면 JSON 출력 시 자동 제외
 public class ErrorResponse {
 

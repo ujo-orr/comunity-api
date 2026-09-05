@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 1. DTO 유효성 검증 실패 (@Valid 에러)
+    // DTO 유효성 검증 실패 (@Valid 에러)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     protected ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         log.warn("handleMethodArgumentNotValidException", e);
@@ -20,7 +20,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ErrorCode.INVALID_INPUT_VALUE.getStatus()).body(response);
     }
 
-    // 2. 비즈니스 로직 예외 (Custom Exception 처리)
+    // 비즈니스 로직 예외 (Custom Exception 처리)
     @ExceptionHandler(BusinessException.class)
     protected ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
         log.warn("handleBusinessException: {}", e.getMessage());
@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(errorCode.getStatus()).body(response);
     }
 
-    // 3. 최상위 예외 (기타 예상치 못한 에러)
+    // 최상위 예외 (기타 예상치 못한 에러)
     @ExceptionHandler(Exception.class)
     protected ResponseEntity<ErrorResponse> handleException(Exception e) {
         log.error("handleException", e); // 500 에러는 원인 파악을 위해 error 레벨로 로그
@@ -41,15 +41,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     protected ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupportedException(
             HttpRequestMethodNotSupportedException e) {
-
         log.error("handleHttpRequestMethodNotSupportedException", e);
-
-        // C002 ErrorCode 지정
         ErrorCode errorCode = ErrorCode.METHOD_NOT_ALLOWED;
-
-        // ErrorResponse 정적 팩토리 메서드 등을 사용하여 JSON 응답 생성
         ErrorResponse response = ErrorResponse.of(errorCode);
-
-        return new ResponseEntity<>(response, HttpStatus.METHOD_NOT_ALLOWED); // 405 상태코드 반환
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(response);
     }
 }

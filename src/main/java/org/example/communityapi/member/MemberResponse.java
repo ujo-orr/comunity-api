@@ -1,14 +1,15 @@
 package org.example.communityapi.member;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class MemberResponse {
-    private final Long id;
     private final String nickname;
 
-    public MemberResponse(Member member) {
-        this.id = member.getId();
-        this.nickname = member.getNickname();
+    public static MemberResponse from(Member member) {
+        return new MemberResponse(member.getNickname());
     }
 }

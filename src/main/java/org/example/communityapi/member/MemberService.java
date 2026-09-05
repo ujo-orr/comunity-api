@@ -47,16 +47,15 @@ public class MemberService {
     public MemberResponse getMemberInfoByNickname(String nickname) {
         Member member = memberRepository.findByNickname(nickname)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        return new MemberResponse(member);
+        return MemberResponse.from(member);
     }
 
     // 내 정보 조회
-    public MemberResponse getMyProfileByEmail(String email) {
+    public MyProfileResponse getMyProfileByEmail(String email) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        return new MemberResponse(member);
+        return MyProfileResponse.from(member);
     }
-
 
     // 수정
     @Transactional

@@ -23,7 +23,7 @@ public class AdminMemberService {
     // 전체 회원 목록 조회 (관리자용 DTO 반환)
     public List<AdminMemberResponse> findAllMembers() {
         return memberRepository.findAll().stream()
-                .map(AdminMemberResponse::new)
+                .map(AdminMemberResponse::from)
                 .toList();
     }
 
@@ -31,14 +31,14 @@ public class AdminMemberService {
     public List<AdminMemberResponse> searchMembers(String keyword) {
         if (!StringUtils.hasText(keyword)) {
             return memberRepository.findAll().stream()
-                    .map(AdminMemberResponse::new)
+                    .map(AdminMemberResponse::from)
                     .toList();
         }
 
         // 이메일, 닉네임, 전화번호 중 하나라도 포함(Containing)되어 있으면 조회
         return memberRepository.searchByKeyword(keyword)
                 .stream()
-                .map(AdminMemberResponse::new)
+                .map(AdminMemberResponse::from)
                 .toList();
     }
 
