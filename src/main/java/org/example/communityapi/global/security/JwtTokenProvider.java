@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
+import java.time.Instant;
 
 @Component
 public class JwtTokenProvider {
@@ -26,17 +26,16 @@ public class JwtTokenProvider {
 
     // 1. 토큰 생성 (email 과 role 을 함께 담아 생성)
     public String createToken(String email, Object role) {
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + expirationMs);
+        Instant now = Instant.now();
+        Instant validity = now.plusMillis(expirationMs);
 
-        // role이 Enum 타입(예: Role.ADMIN)일 수 있으므로 String으로 변환 처리
         String roleString = (role instanceof Enum) ? ((Enum<?>) role).name() : String.valueOf(role);
 
         return Jwts.builder()
                 .subject(email)
-                .claim("role", roleString) // 👈 Claims에 권한 정보 추가!
+                .claim("role", roleString) // Claims에 권한 정보 추가
                 .issuedAt(now)
-                .expiration(validity)
+                .expiration(java.util.Date.from(validity))
                 .signWith(key)
                 .compact();
     }

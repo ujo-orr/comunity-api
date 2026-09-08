@@ -19,28 +19,30 @@ repositories {
 }
 
 dependencies {
-// 1. Web & Validation
+    // Web & Validation
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-    // 2. Security & JWT
+    // Security & JWT
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+    implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
 
-    // 3. DB, ORM & Migration
+    // DB, ORM & Migration
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.flywaydb:flyway-core'
     implementation 'org.flywaydb:flyway-mysql'
     runtimeOnly 'com.mysql:mysql-connector-j'
     runtimeOnly 'com.h2database:h2'
 
-    // 4. Redis & Batch
+    // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // Batch
     implementation 'org.springframework.boot:spring-boot-starter-batch'
 
-    // 5. Swagger API Docs
+    // Swagger API Docs
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 
     // 6. Developer Tools & Lombok

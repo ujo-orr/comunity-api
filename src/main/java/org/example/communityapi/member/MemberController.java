@@ -23,6 +23,16 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.CREATED).body(memberId);
     }
 
+    // 로그인 API (토큰)
+    @PostMapping("/login")
+    public ResponseEntity<MemberLoginResponse> login(
+            @Valid
+            @RequestBody
+            MemberLoginRequest request) {
+        MemberLoginResponse response = memberService.login(request);
+        return ResponseEntity.ok(response);
+    }
+
     // 닉네임 기준 회원 조회 API
     @GetMapping("/search")
     public ResponseEntity<MemberResponse> getMemberProfile(@RequestParam String nickname) {
@@ -46,16 +56,6 @@ public class MemberController {
     ) {
         memberService.updateMyProfile(email, request);
         return ResponseEntity.ok().build();
-    }
-
-    // 로그인 API (토큰)
-    @PostMapping("/login")
-    public ResponseEntity<MemberLoginResponse> login(
-            @Valid
-            @RequestBody
-            MemberLoginRequest request) {
-        MemberLoginResponse response = memberService.login(request);
-        return ResponseEntity.ok(response);
     }
 
     // 본인 회원 탈퇴 (토큰)
