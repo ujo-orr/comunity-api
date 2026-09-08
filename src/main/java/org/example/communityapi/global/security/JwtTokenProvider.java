@@ -34,7 +34,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .subject(email)
                 .claim("role", roleString) // Claims에 권한 정보 추가
-                .issuedAt(now)
+                .issuedAt(java.util.Date.from(now))
                 .expiration(java.util.Date.from(validity))
                 .signWith(key)
                 .compact();
