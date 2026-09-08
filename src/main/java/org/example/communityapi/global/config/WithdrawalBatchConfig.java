@@ -1,4 +1,4 @@
-package org.example.communityapi.global.batch;
+package org.example.communityapi.global.config;
 
 import lombok.RequiredArgsConstructor;
 import org.example.communityapi.member.MemberWithdrawalRepository;

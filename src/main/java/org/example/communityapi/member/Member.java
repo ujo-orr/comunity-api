@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.communityapi.global.entity.BaseTimeEntity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -12,17 +13,17 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "members")
+@Table(name = "MEMBERS")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
 
-public class Member {
+public class Member extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 30)
     private String email;
 
     @Column(nullable = false)
@@ -35,8 +36,12 @@ public class Member {
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 5)
+    @Column(nullable = false, length = 20)
     private Role role;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private MemberStatus status = MemberStatus.ACTIVE;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
@@ -47,12 +52,15 @@ public class Member {
     private LocalDateTime updatedAt;
 
     @Builder
-    public Member(String email, String password, String phoneNumber, String nickname, Role role) {
+    public Member(Long id, String email, String password, String phoneNumber, String nickname, Role role) {
+        this.id = id;
         this.email = email;
         this.password = password;
         this.phoneNumber = phoneNumber;
         this.nickname = nickname;
         this.role = role != null ? role : Role.USER;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
     // 회원 정보 수정 비즈니스 메서드
@@ -70,5 +78,13 @@ public class Member {
 
     public void changeRole(Role newRole) {
         this.role = newRole;
+    }
+
+    public void ban() {
+        this.status = MemberStatus.BANNED;
+    }
+
+    public void unban() {
+        this.status = MemberStatus.ACTIVE;
     }
 }

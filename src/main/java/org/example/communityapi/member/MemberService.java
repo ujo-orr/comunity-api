@@ -115,15 +115,56 @@ public class MemberService {
         // 4. member 테이블에서 해당 회원만 DELETE (Hard Delete)
         memberRepository.delete(member);
     }
+    // 회원탈퇴 복구 (탈퇴 철회)
+    @Transactional
+    public void cancelWithdrawal(String email, MemberWithdrawalRequest request) {
+        // 1. 탈퇴 유예 테이블에서 해당 이메일의 탈퇴 신청 기록 조회
+        MemberWithdrawal withdrawal = memberWithdrawalRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 2. 비밀번호 재검증 (유예 테이블에 보관된 암호화 비밀번호와 비교)
+        if (!passwordEncoder.matches(request.getPassword(), withdrawal.getPassword())) {
+            throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
+        }
+
+        // 3. 닉네임 중복 검사 (유예 기간 중 타인이 해당 닉네임으로 신규 가입했을 위험 방지)
+        if (memberRepository.existsByNickname(withdrawal.getNickname())) {
+            throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
+        }
+
+        // 4. 전화번호 중복 검사
+        if (memberRepository.existsByPhoneNumber(withdrawal.getPhoneNumber())) {
+            throw new BusinessException(ErrorCode.DUPLICATE_PHONE_NUMBER);
+        }
+
+        // 5. Member 엔티티 복원 (Hard Delete 되었으므로 백업된 정보로 새로 생성, 새 Auto Increment ID 부여됨)
+        Member restoredMember = Member.builder()
+                .email(withdrawal.getEmail())
+                .password(withdrawal.getPassword()) // 이미 암호화된 비밀번호 그대로 복구
+                .nickname(withdrawal.getNickname())
+                .phoneNumber(withdrawal.getPhoneNumber())
+                .role(withdrawal.getRole())
+                .build();
+
+        memberRepository.save(restoredMember);
+
+        // 6. 탈퇴 유예 테이블에서 백업 데이터 삭제 (철회 완료)
+        memberWithdrawalRepository.delete(withdrawal);
+    }
 
     // 로그인
     @Transactional(readOnly = true)
     public MemberLoginResponse login(MemberLoginRequest request) {
-        // 1. Member 테이블 조회
+        // Member 테이블 조회
         Optional<Member> memberOpt = memberRepository.findByEmail(request.getEmail());
 
         if (memberOpt.isPresent()) {
             Member member = memberOpt.get();
+
+            if (member.getStatus() == MemberStatus.BANNED) {
+                throw new BusinessException(ErrorCode.BANNED_USER);
+            }
+
             if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
                 throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
             }
@@ -150,5 +191,26 @@ public class MemberService {
 
         // 3. 둘 다 없으면 정말 존재하지 않는 회원
         throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+    }
+
+    @Transactional
+    public void banMember(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 자기 자신이나 다른 관리자를 차단하는 예외 케이스 처리
+        if (member.getRole() == Role.ADMIN) {
+            throw new BusinessException(ErrorCode.BAN_DENIED);
+        }
+
+        member.ban();
+    }
+
+    @Transactional
+    public void unbanMember(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        member.unban();
     }
 }

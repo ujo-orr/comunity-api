@@ -1,4 +1,4 @@
-package org.example.communityapi.global.swagger;
+package org.example.communityapi.global.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;

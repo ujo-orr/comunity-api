@@ -70,4 +70,13 @@ public class MemberController {
         memberService.withdrawMember(email, request);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/restore")
+    public ResponseEntity<Void> cancelWithdrawal(
+            @RequestParam String email,
+            @Valid @RequestBody MemberWithdrawalRequest request
+    ) {
+        memberService.cancelWithdrawal(email, request);
+        return ResponseEntity.ok().build();
+    }
 }

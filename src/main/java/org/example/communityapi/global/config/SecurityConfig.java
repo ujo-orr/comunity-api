@@ -1,6 +1,10 @@
-package org.example.communityapi.global.security;
+package org.example.communityapi.global.config;
 
 import lombok.RequiredArgsConstructor;
+import org.example.communityapi.global.security.CustomAccessDeniedHandler;
+import org.example.communityapi.global.security.CustomAuthenticationEntryPoint;
+import org.example.communityapi.global.security.JwtAuthenticationFilter;
+import org.example.communityapi.global.security.JwtTokenProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -56,7 +60,8 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/members/signup", "/api/members/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/members/search/**").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/superadmin/**").hasRole("SUPERADMIN")
+                        .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "SUPERADMIN") // 관리자 공통
                         .anyRequest().authenticated()
                 )
                 // 인증, 인가 예외 핸들러

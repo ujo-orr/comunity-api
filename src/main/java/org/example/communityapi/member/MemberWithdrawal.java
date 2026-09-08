@@ -4,18 +4,20 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.communityapi.global.entity.BaseTimeEntity;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MemberWithdrawal {
+public class MemberWithdrawal extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     // Member 원복용 백업 데이터
+    private Long originalId;
     private String email;
     private String password;
     private String nickname;
@@ -31,6 +33,7 @@ public class MemberWithdrawal {
     private LocalDateTime expireAt;  // 데이터 영구 삭제(파기) 예정 일시
 
     public MemberWithdrawal(Member member) {
+        this.originalId = member.getId();
         this.email = member.getEmail();
         this.password = member.getPassword();
         this.nickname = member.getNickname();
