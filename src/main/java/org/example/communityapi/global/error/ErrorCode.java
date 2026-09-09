@@ -11,8 +11,7 @@ public enum ErrorCode {
     // 400 Bad Request 검증 실패
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "C001", "적절하지 않은 요청 값입니다."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "C002", "지원하지 않는 HTTP 메서드입니다."),
-    BANNED_USER(HttpStatus.BAD_REQUEST,"C003", "관리자에 의해 이용이 제한된 계정 입니다."),
-    CANNOT_DEMOTE_LAST_SUPERADMIN(HttpStatus.BAD_REQUEST,"C004","SUPERADMIN은 권한을 변경할 수 없습니다."),
+    CANNOT_DEMOTE_LAST_SUPERADMIN(HttpStatus.BAD_REQUEST,"C003","SUPERADMIN은 권한을 변경할 수 없습니다."),
 
     // 401 Unauthorized 로그인 실패
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A001", "아이디 또는 비밀번호가 올바르지 않습니다."),
@@ -21,6 +20,7 @@ public enum ErrorCode {
     // 403 Forbidden
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "A003", "해당 리소스에 접근할 권한이 없습니다."),
     BAN_DENIED(HttpStatus.FORBIDDEN,"A004","관리자 계정은 차단할 수 없습니다."),
+    BANNED_USER(HttpStatus.FORBIDDEN,"A005", "관리자에 의해 이용이 제한된 계정 입니다."),
 
     // 404 Not Found 회원 존재 X
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "존재하지 않는 회원입니다."),

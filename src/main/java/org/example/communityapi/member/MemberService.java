@@ -169,7 +169,7 @@ public class MemberService {
                 throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
             }
             // 정상 로그인: JWT 토큰 생성 및 반환
-            String accessToken = jwtTokenProvider.createToken(member.getEmail());
+            String accessToken = jwtTokenProvider.createToken(member.getEmail(), member.getRole());
             return MemberLoginResponse.success(accessToken);
         }
 

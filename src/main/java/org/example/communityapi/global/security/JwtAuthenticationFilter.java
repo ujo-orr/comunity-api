@@ -41,12 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String email = claims.getSubject();
                 String role = claims.get("role", String.class);
 
-                List<GrantedAuthority> authorities = List.of(
-                        new SimpleGrantedAuthority("ROLE_" + role)
-                );
-
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(email, null, authorities);
+                UsernamePasswordAuthenticationToken authentication = getAuthentication(role, email);
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (JwtException | IllegalArgumentException e) {
@@ -62,6 +57,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    @org.springframework.lang.NonNull
+    private static UsernamePasswordAuthenticationToken getAuthentication(String role, String email) {
+        List<GrantedAuthority> authorities = List.of(
+                new SimpleGrantedAuthority("ROLE_" + role)
+        );
+
+        // 1. Spring Security의 UserDetails (User) 객체를 직접 생성
+        org.springframework.security.core.userdetails.User principal =
+                new org.springframework.security.core.userdetails.User(email, "", authorities);
+
+        // 2. Principal 자리에 단순 email 문자열이 아닌 'principal (User)' 객체를 전달
+        return new UsernamePasswordAuthenticationToken(principal, null, authorities);
     }
 
     // Header에서 "Bearer <Token>" 형태 추출

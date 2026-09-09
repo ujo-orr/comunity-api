@@ -52,13 +52,14 @@ public class Member extends BaseTimeEntity {
     private LocalDateTime updatedAt;
 
     @Builder
-    public Member(Long id, String email, String password, String phoneNumber, String nickname, Role role) {
+    public Member(Long id, String email, String password, String phoneNumber, String nickname, Role role, MemberStatus status) {
         this.id = id;
         this.email = email;
         this.password = password;
         this.phoneNumber = phoneNumber;
         this.nickname = nickname;
         this.role = role != null ? role : Role.USER;
+        this.status = status;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }

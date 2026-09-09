@@ -13,7 +13,9 @@ public class AdminMemberResponse {
     private final String nickname;
     private final String phoneNumber;
     private final Role role;
+    private final MemberStatus status;
     private final LocalDateTime createdAt;
+    private final LocalDateTime updatedAt;
 
     public static AdminMemberResponse from(Member member) {
         return new AdminMemberResponse(
@@ -22,7 +24,9 @@ public class AdminMemberResponse {
                 member.getNickname(),
                 member.getPhoneNumber(),
                 member.getRole(),
-                member.getCreatedAt()
+                member.getStatus(),
+                member.getCreatedAt(),
+                member.getUpdatedAt()
         );
     }
 }

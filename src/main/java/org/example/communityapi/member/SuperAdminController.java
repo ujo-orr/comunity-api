@@ -1,10 +1,11 @@
 package org.example.communityapi.member;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.User;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

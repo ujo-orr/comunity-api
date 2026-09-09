@@ -17,7 +17,7 @@ public class SuperAdminInitializer implements CommandLineRunner {
         // ADMIN 권한을 가진 계정이 없으면 자동 생성
         if (!memberRepository.existsByRole(Role.ADMIN)) {
             Member superAdmin = Member.builder()
-                    .email("suerpadmin@system.com")
+                    .email("superAdmin@system.com")
                     .password(passwordEncoder.encode("!Q2w3e4r"))
                     .nickname("Admin")
                     .phoneNumber("01000000000")

@@ -40,17 +40,12 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // 기존 단일 매개변수 createToken(email)도 필요한 경우를 위해 오버로딩 유지 가능
-    public String createToken(String email) {
-        return createToken(email, "USER");
-    }
-
     // 2. 토큰에서 이메일(Subject) 추출
     public String getEmailFromToken(String token) {
         return getClaimsFromToken(token).getSubject();
     }
 
-    // 3. 토큰에서 권한(Role) 추출 메서드 👈 [새로 추가]
+    // 3. 토큰에서 권한(Role) 추출 메서드
     public String getRoleFromToken(String token) {
         return getClaimsFromToken(token).get("role", String.class);
     }
@@ -62,15 +57,5 @@ public class JwtTokenProvider {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-    }
-
-    // 4. 토큰 유효성 검증
-    public boolean validateToken(String token) {
-        try {
-            getClaimsFromToken(token);
-            return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
-        }
     }
 }
