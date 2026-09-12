@@ -1,9 +1,10 @@
-package org.example.communityapi.member;
+package org.example.communityapi.member.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.communityapi.member.Member;
 
 @Getter
 @NoArgsConstructor

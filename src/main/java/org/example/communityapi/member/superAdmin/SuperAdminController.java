@@ -1,4 +1,4 @@
-package org.example.communityapi.member;
+package org.example.communityapi.member.superAdmin;
 
 import lombok.RequiredArgsConstructor;
 
@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/superadmin")
-@PreAuthorize("hasRole('SUPERADMIN')")
 @RequiredArgsConstructor
 public class SuperAdminController {
 

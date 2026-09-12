@@ -8,22 +8,37 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
 
+@Slf4j
+@Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+    private final StringRedisTemplate stringRedisTemplate;
+
+    private boolean isBlacklisted(String token) {
+        try {
+            String isLogout = stringRedisTemplate.opsForValue().get(token);
+            return "logout".equals(isLogout);
+        } catch (Exception e) {
+            log.error("Redis 조회 중 에러 발생: {}", e.getMessage());
+            return false; // Redis 장애 시 서비스 전체 중단을 막기 위해 통과 처리
+        }
+    }
 
     @Override
     protected void doFilterInternal(
@@ -36,49 +51,66 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (StringUtils.hasText(token)) {
             try {
-                // Claims를 한 번만 파싱한. 만료·위조·형식 오류는 JwtException으로 처리.
+                // 1. Redis 블랙리스트(로그아웃 여부) 확인
+                if (isBlacklisted(token)) {
+                    log.debug("로그아웃된 JWT 사용 시도");
+                    SecurityContextHolder.clearContext();
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
+                // 2. Claims 파싱 (만료/위조 체크)
                 Claims claims = jwtTokenProvider.getClaimsFromToken(token);
                 String email = claims.getSubject();
                 String role = claims.get("role", String.class);
 
-                UsernamePasswordAuthenticationToken authentication = getAuthentication(role, email);
+                // Refresh Token이 Access Token 자리에 들어오는 것 방지 (role 존재 여부 확인)
+                if (!StringUtils.hasText(email) || !StringUtils.hasText(role)) {
+                    log.debug("JWT에 필수 Claims(email/role)가 누락되었습니다.");
+                    SecurityContextHolder.clearContext();
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
+                // 3. Authentication 객체 생성 및 Context 저장
+                UsernamePasswordAuthenticationToken authentication = getAuthentication(role, email);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+
             } catch (JwtException | IllegalArgumentException e) {
-                // 필터 단계의 예외는 ControllerAdvice까지 가지 않으므로 401 응답을 직접 위임한다.
+                log.debug("유효하지 않은 JWT: {}", e.getMessage());
                 SecurityContextHolder.clearContext();
-                authenticationEntryPoint.commence(
-                        request,
-                        response,
-                        new InsufficientAuthenticationException("유효하지 않거나 만료된 JWT입니다.", e)
-                );
-                return;
             }
         }
 
         filterChain.doFilter(request, response);
     }
 
-    @org.springframework.lang.NonNull
     private static UsernamePasswordAuthenticationToken getAuthentication(String role, String email) {
+        // "ROLE_" 중복 접두사 방지
+        String authorityRole = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+
         List<GrantedAuthority> authorities = List.of(
-                new SimpleGrantedAuthority("ROLE_" + role)
+                new SimpleGrantedAuthority(authorityRole)
         );
 
-        // 1. Spring Security의 UserDetails (User) 객체를 직접 생성
-        org.springframework.security.core.userdetails.User principal =
-                new org.springframework.security.core.userdetails.User(email, "", authorities);
-
-        // 2. Principal 자리에 단순 email 문자열이 아닌 'principal (User)' 객체를 전달
+        User principal = new User(email, "", authorities);
         return new UsernamePasswordAuthenticationToken(principal, null, authorities);
     }
 
-    // Header에서 "Bearer <Token>" 형태 추출
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+        if (!StringUtils.hasText(bearerToken) || !bearerToken.startsWith("Bearer ")) {
+            return null;
         }
-        return null;
+
+        String token = bearerToken.substring(7).trim();
+
+        if (!StringUtils.hasText(token)
+                || "null".equalsIgnoreCase(token)
+                || "undefined".equalsIgnoreCase(token)) {
+            return null;
+        }
+
+        return token;
     }
 }

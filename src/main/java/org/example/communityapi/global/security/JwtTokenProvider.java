@@ -10,47 +10,69 @@ import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Date;
 
 @Component
 public class JwtTokenProvider {
 
     private final SecretKey key;
-    private final long expirationMs;
+    private final long accessTokenExpirationMs;
+    private final long refreshTokenExpirationMs;
 
     public JwtTokenProvider(
             @Value("${jwt.secret}") String secretKey,
-            @Value("${jwt.expiration-ms}") long expirationMs) {
+            @Value("${jwt.access-expiration-ms}") long accessTokenExpirationMs,
+            @Value("${jwt.refresh-expiration-ms}") long refreshTokenExpirationMs
+    ) {
         this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
-        this.expirationMs = expirationMs;
+        this.accessTokenExpirationMs = accessTokenExpirationMs;
+        this.refreshTokenExpirationMs = refreshTokenExpirationMs;
     }
 
-    // 1. 토큰 생성 (email 과 role 을 함께 담아 생성)
-    public String createToken(String email, Object role) {
+    private String createToken(String email, String role, long expirationMs) {
         Instant now = Instant.now();
         Instant validity = now.plusMillis(expirationMs);
 
-        String roleString = (role instanceof Enum) ? ((Enum<?>) role).name() : String.valueOf(role);
-
-        return Jwts.builder()
+        var builder = Jwts.builder()
                 .subject(email)
-                .claim("role", roleString) // Claims에 권한 정보 추가
-                .issuedAt(java.util.Date.from(now))
-                .expiration(java.util.Date.from(validity))
-                .signWith(key)
-                .compact();
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(validity));
+
+        if (role != null) {
+            builder.claim("role", role);
+        }
+
+        return builder.signWith(key).compact();
     }
 
-    // 2. 토큰에서 이메일(Subject) 추출
+    public String createAccessToken(String email, Object role) {
+        String roleString = (role instanceof Enum) ? ((Enum<?>) role).name() : String.valueOf(role);
+        return createToken(email, roleString, accessTokenExpirationMs);
+    }
+
+    public String createRefreshToken(String email) {
+        return createToken(email, null, refreshTokenExpirationMs);
+    }
+
     public String getEmailFromToken(String token) {
         return getClaimsFromToken(token).getSubject();
     }
 
-    // 3. 토큰에서 권한(Role) 추출 메서드
-    public String getRoleFromToken(String token) {
-        return getClaimsFromToken(token).get("role", String.class);
+    public long getExpiration(String token) {
+        Date expiration = getClaimsFromToken(token).getExpiration();
+        long remainingTime = expiration.getTime() - System.currentTimeMillis();
+        return Math.max(remainingTime, 0);
     }
 
-    // 토큰을 한 번 파싱해 Claims를 반환한다. 만료·위조 토큰은 JwtException을 발생시킨다.
+    public boolean validateToken(String token) {
+        try {
+            getClaimsFromToken(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
     public Claims getClaimsFromToken(String token) {
         return Jwts.parser()
                 .verifyWith(key)

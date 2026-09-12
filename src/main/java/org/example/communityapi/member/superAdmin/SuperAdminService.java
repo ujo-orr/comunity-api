@@ -1,8 +1,11 @@
-package org.example.communityapi.member;
+package org.example.communityapi.member.superAdmin;
 
 import lombok.RequiredArgsConstructor;
 import org.example.communityapi.global.error.BusinessException;
 import org.example.communityapi.global.error.ErrorCode;
+import org.example.communityapi.member.Member;
+import org.example.communityapi.member.MemberRepository;
+import org.example.communityapi.member.Role;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

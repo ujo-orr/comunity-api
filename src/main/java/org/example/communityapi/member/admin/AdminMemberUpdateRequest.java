@@ -1,8 +1,9 @@
-package org.example.communityapi.member;
+package org.example.communityapi.member.admin;
 
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.communityapi.member.Role;
 
 @Getter
 @NoArgsConstructor

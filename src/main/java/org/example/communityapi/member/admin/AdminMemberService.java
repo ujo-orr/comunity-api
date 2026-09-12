@@ -1,9 +1,11 @@
-package org.example.communityapi.member;
+package org.example.communityapi.member.admin;
 
 import lombok.RequiredArgsConstructor;
 
 import org.example.communityapi.global.error.BusinessException;
 import org.example.communityapi.global.error.ErrorCode;
+import org.example.communityapi.auth.repository.RefreshTokenRepository;
+import org.example.communityapi.member.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -17,6 +19,7 @@ public class AdminMemberService {
 
     private final MemberRepository memberRepository;
     private final MemberWithdrawalRepository memberWithdrawalRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     // 전체 회원 목록 조회 (관리자용 DTO 반환)
     public List<AdminMemberResponse> findAllMembers() {
@@ -72,5 +75,26 @@ public class AdminMemberService {
         memberWithdrawalRepository.delete(withdrawal);
     }
 
+    @Transactional
+    public void banMember(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
+        // 자기 자신이나 다른 관리자를 차단하는 예외 케이스 처리
+        if (member.getRole() == Role.ADMIN) {
+            throw new BusinessException(ErrorCode.BAN_DENIED);
+        }
+
+        member.ban();
+
+        refreshTokenRepository.deleteByEmail(member.getEmail());
+    }
+
+    @Transactional
+    public void unbanMember(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        member.unban();
+    }
 }

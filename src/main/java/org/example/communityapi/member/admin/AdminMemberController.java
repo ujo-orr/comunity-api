@@ -1,7 +1,7 @@
-package org.example.communityapi.member;
+package org.example.communityapi.member.admin;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.communityapi.member.MemberService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +11,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/members")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminMemberController {
     private final AdminMemberService adminMemberService;
     private final MemberService memberService;
@@ -42,14 +41,14 @@ public class AdminMemberController {
     // 회원 차단
     @PatchMapping("/{id}/ban")
     public ResponseEntity<Void> banMember(@PathVariable Long id) {
-        memberService.banMember(id);
+        adminMemberService.banMember(id);
         return ResponseEntity.ok().build();
     }
 
     // 차단 해제
     @PatchMapping("/{id}/unban")
     public ResponseEntity<Void> unbanMember(@PathVariable Long id) {
-        memberService.unbanMember(id);
+        adminMemberService.unbanMember(id);
         return ResponseEntity.ok().build();
     }
 }

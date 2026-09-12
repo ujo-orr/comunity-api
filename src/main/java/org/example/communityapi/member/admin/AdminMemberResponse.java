@@ -1,8 +1,12 @@
-package org.example.communityapi.member;
+package org.example.communityapi.member.admin;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.example.communityapi.member.Member;
+import org.example.communityapi.member.MemberStatus;
+import org.example.communityapi.member.Role;
+
 import java.time.LocalDateTime;
 
 @Getter

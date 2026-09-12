@@ -59,7 +59,7 @@ public class Member extends BaseTimeEntity {
         this.phoneNumber = phoneNumber;
         this.nickname = nickname;
         this.role = role != null ? role : Role.USER;
-        this.status = status;
+        this.status = status != null ? status : MemberStatus.ACTIVE;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }

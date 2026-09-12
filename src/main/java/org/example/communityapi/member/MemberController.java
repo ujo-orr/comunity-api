@@ -2,16 +2,17 @@ package org.example.communityapi.member;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.communityapi.member.dto.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/members")
 @RequiredArgsConstructor
-
 public class MemberController {
     private final MemberService memberService;
 
@@ -23,27 +24,19 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.CREATED).body(memberId);
     }
 
-    // 로그인 API (토큰)
-    @PostMapping("/login")
-    public ResponseEntity<MemberLoginResponse> login(
-            @Valid
-            @RequestBody
-            MemberLoginRequest request) {
-        MemberLoginResponse response = memberService.login(request);
-        return ResponseEntity.ok(response);
-    }
-
     // 닉네임 기준 회원 조회 API
     @GetMapping("/search")
-    public ResponseEntity<MemberResponse> getMemberProfile(@RequestParam String nickname) {
+    public ResponseEntity<MemberSearchResponse> getMemberProfile(@RequestParam String nickname) {
         return ResponseEntity.ok(memberService.getMemberInfoByNickname(nickname));
     }
 
     // 내 정보 조회 API (토큰)
     @GetMapping("/me")
-    public ResponseEntity<MyProfileResponse> getMyInfo(@AuthenticationPrincipal String email) {
-        // Service에서 MemberResponse를 반환받도록 호출
-        MyProfileResponse response = memberService.getMyProfileByEmail(email);
+    public ResponseEntity<MemberMyProfileResponse> getMyInfo(
+            @AuthenticationPrincipal User user
+    ) {
+        String email = user.getUsername();
+        MemberMyProfileResponse response = memberService.getMyProfileByEmail(email);
         return ResponseEntity.ok(response);
     }
 

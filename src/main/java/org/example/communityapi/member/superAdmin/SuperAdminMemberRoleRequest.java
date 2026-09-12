@@ -1,9 +1,10 @@
-package org.example.communityapi.member;
+package org.example.communityapi.member.superAdmin;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.communityapi.member.Role;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

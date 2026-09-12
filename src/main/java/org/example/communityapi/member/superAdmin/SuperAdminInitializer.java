@@ -1,6 +1,10 @@
-package org.example.communityapi.member;
+package org.example.communityapi.member.superAdmin;
 
 import lombok.RequiredArgsConstructor;
+import org.example.communityapi.member.Member;
+import org.example.communityapi.member.MemberRepository;
+import org.example.communityapi.member.MemberStatus;
+import org.example.communityapi.member.Role;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -19,9 +23,10 @@ public class SuperAdminInitializer implements CommandLineRunner {
             Member superAdmin = Member.builder()
                     .email("superAdmin@system.com")
                     .password(passwordEncoder.encode("!Q2w3e4r"))
-                    .nickname("Admin")
+                    .nickname("SuperAdmin")
                     .phoneNumber("01000000000")
                     .role(Role.SUPERADMIN)
+                    .status(MemberStatus.ACTIVE)
                     .build();
             memberRepository.save(superAdmin);
         }
