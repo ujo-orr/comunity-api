@@ -26,6 +26,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "존재하지 않는 회원입니다."),
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "E001", "존재하지 않는 카테고리입니다."),
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "E002", "존재하지 않는 게시글입니다."),
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "E005", "존재하지 않는 댓글입니다."),
 
     // 409 Conflict 중복
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U002", "이미 존재하는 이메일입니다."),
@@ -33,6 +34,8 @@ public enum ErrorCode {
     DUPLICATE_PHONE_NUMBER(HttpStatus.CONFLICT, "U004", "이미 존재하는 휴대폰 번호 입니다."),
     DUPLICATE_CATEGORY_NAME(HttpStatus.CONFLICT, "E003", "이미 존재하는 카테고리 입니다."),
     CATEGORY_IN_USE(HttpStatus.CONFLICT, "E004", "사용중인 카테고리 입니다."),
+    ALREADY_LIKED_POST(HttpStatus.CONFLICT, "E006", "이미 좋아요한 게시글입니다."),
+    POST_LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "E007", "좋아요 기록이 존재하지 않습니다."),
 
     // 500 Internal Server Error
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S001", "서버 내부 에러가 발생했습니다. 관리자에게 문의하세요.");
@@ -41,4 +44,3 @@ public enum ErrorCode {
     private final String code;
     private final String message;
 }
-

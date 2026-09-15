@@ -86,7 +86,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private static UsernamePasswordAuthenticationToken getAuthentication(String role, String email) {
-        // "ROLE_" 중복 접두사 방지
         String authorityRole = role.startsWith("ROLE_") ? role : "ROLE_" + role;
 
         List<GrantedAuthority> authorities = List.of(
