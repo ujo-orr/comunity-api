@@ -1,26 +1,21 @@
-package org.example.communityapi.member.admin;
+package org.example.communityapi.member.admin.dto;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import org.example.communityapi.member.Member;
 import org.example.communityapi.member.MemberStatus;
 import org.example.communityapi.member.Role;
 
 import java.time.LocalDateTime;
 
-@Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class AdminMemberResponse {
-    private final Long id;
-    private final String email;
-    private final String nickname;
-    private final String phoneNumber;
-    private final Role role;
-    private final MemberStatus status;
-    private final LocalDateTime createdAt;
-    private final LocalDateTime updatedAt;
-
+public record AdminMemberResponse(
+        Long id,
+        String email,
+        String nickname,
+        String phoneNumber,
+        Role role,
+        MemberStatus status,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
+) {
     public static AdminMemberResponse from(Member member) {
         return new AdminMemberResponse(
                 member.getId(),

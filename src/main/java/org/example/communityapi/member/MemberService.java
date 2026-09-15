@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-
 public class MemberService {
     private final MemberRepository memberRepository;
     private final MemberWithdrawalRepository memberWithdrawalRepository;
@@ -22,17 +21,17 @@ public class MemberService {
     // 회원가입
     @Transactional
     public Long signUp(MemberSignUpRequest request) {
-        if (memberRepository.existsByEmail(request.getEmail())) {
+        if (memberRepository.existsByEmail(request.email())) {
             throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
         }
-        if (memberRepository.existsByNickname(request.getNickname())) {
+        if (memberRepository.existsByNickname(request.nickname())) {
             throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
         }
-        if (memberRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+        if (memberRepository.existsByPhoneNumber(request.phoneNumber())) {
             throw new BusinessException(ErrorCode.DUPLICATE_PHONE_NUMBER);
         }
         // 비밀번호 암호화
-        String encodedPassword = passwordEncoder.encode(request.getPassword());
+        String encodedPassword = passwordEncoder.encode(request.password());
         // DTO를 엔터티로 변환 후 DB에 저장
         Member member = request.toEntity(encodedPassword);
         Member savedMember = memberRepository.save(member);
@@ -63,8 +62,8 @@ public class MemberService {
 
         // 2. 닉네임 처리 (값이 들어온 경우에만 중복 검사 및 변경 대상 지정)
         String newNickname = member.getNickname();
-        if (org.springframework.util.StringUtils.hasText(request.getNickname())) {
-            String inputNickname = request.getNickname();
+        if (org.springframework.util.StringUtils.hasText(request.nickname())) {
+            String inputNickname = request.nickname();
             // 기존 닉네임과 다르고, 다른 사용자가 이미 사용 중이라면 예외 발생
             if (!member.getNickname().equals(inputNickname) && memberRepository.existsByNickname(inputNickname)) {
                 throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
@@ -74,8 +73,8 @@ public class MemberService {
 
         // 3. 전화번호 처리 (값이 들어온 경우에만 중복 검사 및 변경 대상 지정)
         String newPhoneNumber = member.getPhoneNumber(); // 기본값: 기존 전화번호
-        if (org.springframework.util.StringUtils.hasText(request.getPhoneNumber())) {
-            String inputPhoneNumber = request.getPhoneNumber();
+        if (org.springframework.util.StringUtils.hasText(request.phoneNumber())) {
+            String inputPhoneNumber = request.phoneNumber();
             // 기존 전화번호와 다르고, 다른 사용자가 이미 사용 중이라면 예외 발생
             if (!member.getPhoneNumber().equals(inputPhoneNumber) && memberRepository.existsByPhoneNumber(inputPhoneNumber)) {
                 throw new BusinessException(ErrorCode.DUPLICATE_PHONE_NUMBER);
@@ -85,8 +84,8 @@ public class MemberService {
 
         // 4. 비밀번호 처리 (값이 들어온 경우에만 암호화)
         String newPassword = member.getPassword(); // 기본값: 기존 비밀번호
-        if (org.springframework.util.StringUtils.hasText(request.getPassword())) {
-            newPassword = passwordEncoder.encode(request.getPassword());
+        if (org.springframework.util.StringUtils.hasText(request.password())) {
+            newPassword = passwordEncoder.encode(request.password());
         }
 
         // 5. 프로필 업데이트 (최종 결정된 값 전달)
@@ -101,7 +100,7 @@ public class MemberService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 2. 비밀번호 검증 (한 번 더 확인)
-        if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
+        if (!passwordEncoder.matches(request.password(), member.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
@@ -121,7 +120,7 @@ public class MemberService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 2. 비밀번호 재검증 (유예 테이블에 보관된 암호화 비밀번호와 비교)
-        if (!passwordEncoder.matches(request.getPassword(), withdrawal.getPassword())) {
+        if (!passwordEncoder.matches(request.password(), withdrawal.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 

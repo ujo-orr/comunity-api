@@ -6,6 +6,7 @@ import org.example.communityapi.global.error.BusinessException;
 import org.example.communityapi.global.error.ErrorCode;
 import org.example.communityapi.auth.repository.RefreshTokenRepository;
 import org.example.communityapi.member.*;
+import org.example.communityapi.member.admin.dto.AdminMemberResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;

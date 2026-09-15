@@ -6,8 +6,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.communityapi.global.entity.BaseTimeEntity;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
@@ -43,14 +41,6 @@ public class Member extends BaseTimeEntity {
     @Column(nullable = false, length = 20)
     private MemberStatus status = MemberStatus.ACTIVE;
 
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
-
     @Builder
     public Member(Long id, String email, String password, String phoneNumber, String nickname, Role role, MemberStatus status) {
         this.id = id;
@@ -60,8 +50,6 @@ public class Member extends BaseTimeEntity {
         this.nickname = nickname;
         this.role = role != null ? role : Role.USER;
         this.status = status != null ? status : MemberStatus.ACTIVE;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
     // 회원 정보 수정 비즈니스 메서드

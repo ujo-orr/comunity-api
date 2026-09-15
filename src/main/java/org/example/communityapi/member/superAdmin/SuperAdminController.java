@@ -2,8 +2,8 @@ package org.example.communityapi.member.superAdmin;
 
 import lombok.RequiredArgsConstructor;
 
+import org.example.communityapi.member.superAdmin.dto.SuperAdminMemberRoleRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +25,7 @@ public class SuperAdminController {
         // UserDetails의 getUsername()은 시큐리티 인증 시 넣었던 식별자(이메일 또는 String으로 변환된 Member ID)를 반환합니다.
         String email = loginUser.getUsername();
 
-        superAdminService.updateRole(id, request.getRole(), email);
+        superAdminService.updateRole(id, request.role(), email);
         return ResponseEntity.ok().build();
     }
 }

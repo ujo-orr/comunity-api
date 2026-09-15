@@ -29,7 +29,6 @@ public class MemberWithdrawal extends BaseTimeEntity {
     private LocalDateTime originalCreatedAt; // 최초 가입일 복원용
 
     // 탈퇴 유예 관리 & 자동 파기용 데이터
-    private LocalDateTime deletedAt; // 탈퇴 요청 일시
     private LocalDateTime expireAt;  // 데이터 영구 삭제(파기) 예정 일시
 
     public MemberWithdrawal(Member member) {
@@ -42,7 +41,6 @@ public class MemberWithdrawal extends BaseTimeEntity {
         this.originalCreatedAt = member.getCreatedAt();
 
         // 시간 기록
-        this.deletedAt = LocalDateTime.now();
-        this.expireAt = this.deletedAt.plusDays(30); // 삭제 유예 만료일
+        this.expireAt = LocalDateTime.now().plusDays(30); // 삭제 유예 만료일
     }
 }
