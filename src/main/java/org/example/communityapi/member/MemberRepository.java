@@ -1,6 +1,6 @@
 package org.example.communityapi.member;
 
-
+import org.example.communityapi.member.admin.dto.AdminMemberResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,10 +17,22 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Optional<Member> findByEmail(String email);
     Optional<Member> findByNickname(String nickname);
 
-    @Query("SELECT m FROM Member m WHERE " +
+    @Query("""
+            SELECT new org.example.communityapi.member.admin.dto.AdminMemberResponse(
+                m.id, m.email, m.nickname, m.phoneNumber, m.role, m.status, m.createdAt, m.updatedAt
+            )
+            FROM Member m
+            ORDER BY m.createdAt DESC
+            """)
+    List<AdminMemberResponse> findAllAdminMemberResponses();
+
+    @Query("SELECT new org.example.communityapi.member.admin.dto.AdminMemberResponse(" +
+            "m.id, m.email, m.nickname, m.phoneNumber, m.role, m.status, m.createdAt, m.updatedAt) " +
+            "FROM Member m WHERE " +
             "CAST(m.id AS string) LIKE %:keyword% OR " +
             "m.email LIKE %:keyword% OR " +
             "m.nickname LIKE %:keyword% OR " +
-            "m.phoneNumber LIKE %:keyword%")
-    List<Member> searchByKeyword(@Param("keyword") String keyword);
+            "m.phoneNumber LIKE %:keyword% " +
+            "ORDER BY m.createdAt DESC")
+    List<AdminMemberResponse> searchAdminMemberResponsesByKeyword(@Param("keyword") String keyword);
 }

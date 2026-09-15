@@ -43,4 +43,14 @@ public class MemberWithdrawal extends BaseTimeEntity {
         // 시간 기록
         this.expireAt = LocalDateTime.now().plusDays(30); // 삭제 유예 만료일
     }
+
+    public Member toMember() {
+        return Member.builder()
+                .email(email)
+                .password(password)
+                .nickname(nickname)
+                .phoneNumber(phoneNumber)
+                .role(role)
+                .build();
+    }
 }

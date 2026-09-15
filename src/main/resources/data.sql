@@ -10,8 +10,8 @@ VALUES ('경제', NOW(), NOW());
 
 
 -- 기본 회원 데이터 Password123!
-INSERT INTO members (id, email, password, nickname, phone_number, role, status, created_at, updated_at)
-VALUES (1, 'test@example.com', '$2a$12$lPuUjdhho6r/XaOI7F/ozOV4RPV9YU2ptrxnB3dm2BaouiWLp1N/u', 'abc', '01000000002', 'USER', 'ACTIVE', NOW(), NOW());
+INSERT INTO members (email, password, nickname, phone_number, role, status, created_at, updated_at)
+VALUES ('test@example.com', '$2a$12$lPuUjdhho6r/XaOI7F/ozOV4RPV9YU2ptrxnB3dm2BaouiWLp1N/u', 'abc', '01000000002', 'USER', 'ACTIVE', NOW(), NOW());
 
 -- 기본 게시글 데이터
 INSERT INTO posts (id, member_id, category_id, title, content, view_count, created_at, updated_at)

@@ -24,24 +24,17 @@ public class AdminMemberService {
 
     // 전체 회원 목록 조회 (관리자용 DTO 반환)
     public List<AdminMemberResponse> findAllMembers() {
-        return memberRepository.findAll().stream()
-                .map(AdminMemberResponse::from)
-                .toList();
+        return memberRepository.findAllAdminMemberResponses();
     }
 
     // 회원 조회
     public List<AdminMemberResponse> searchMembers(String keyword) {
         if (!StringUtils.hasText(keyword)) {
-            return memberRepository.findAll().stream()
-                    .map(AdminMemberResponse::from)
-                    .toList();
+            return memberRepository.findAllAdminMemberResponses();
         }
 
         // 이메일, 닉네임, 전화번호 중 하나라도 포함(Containing)되어 있으면 조회
-        return memberRepository.searchByKeyword(keyword)
-                .stream()
-                .map(AdminMemberResponse::from)
-                .toList();
+        return memberRepository.searchAdminMemberResponsesByKeyword(keyword);
     }
 
     // 회원탈퇴 복구 (탈퇴 철회)
@@ -61,16 +54,7 @@ public class AdminMemberService {
             throw new BusinessException(ErrorCode.DUPLICATE_PHONE_NUMBER);
         }
 
-        // Member 엔티티 복원 (Hard Delete 되었으므로 백업된 정보로 새로 생성, 새 Auto Increment ID 부여됨)
-        Member restoredMember = Member.builder()
-                .email(withdrawal.getEmail())
-                .password(withdrawal.getPassword()) // 이미 암호화된 비밀번호 그대로 복구
-                .nickname(withdrawal.getNickname())
-                .phoneNumber(withdrawal.getPhoneNumber())
-                .role(withdrawal.getRole())
-                .build();
-
-        memberRepository.save(restoredMember);
+        memberRepository.save(withdrawal.toMember());
 
         // 6. 탈퇴 유예 테이블에서 백업 데이터 삭제 (철회 완료)
         memberWithdrawalRepository.delete(withdrawal);

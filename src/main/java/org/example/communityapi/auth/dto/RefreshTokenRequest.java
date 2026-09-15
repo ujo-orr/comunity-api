@@ -1,10 +1,8 @@
 package org.example.communityapi.auth.dto;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotBlank;
 
-@Getter
-@NoArgsConstructor
-public class RefreshTokenRequest {
-    private String refreshToken;
-}
+public record RefreshTokenRequest(
+        @NotBlank(message = "Refresh Token은 필수 입력 항목입니다.")
+        String refreshToken
+) {}

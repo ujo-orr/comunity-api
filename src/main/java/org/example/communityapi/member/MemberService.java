@@ -134,16 +134,7 @@ public class MemberService {
             throw new BusinessException(ErrorCode.DUPLICATE_PHONE_NUMBER);
         }
 
-        // 5. Member 엔티티 복원
-        Member restoredMember = Member.builder()
-                .email(withdrawal.getEmail())
-                .password(withdrawal.getPassword()) // 이미 암호화된 비밀번호 그대로 복구
-                .nickname(withdrawal.getNickname())
-                .phoneNumber(withdrawal.getPhoneNumber())
-                .role(withdrawal.getRole())
-                .build();
-
-        memberRepository.save(restoredMember);
+        memberRepository.save(withdrawal.toMember());
 
         // 6. 탈퇴 유예 테이블에서 백업 데이터 삭제 (철회 완료)
         memberWithdrawalRepository.delete(withdrawal);

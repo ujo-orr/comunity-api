@@ -23,8 +23,8 @@ public class AuthController {
 
     // Access Token 재발급 요청
     @PostMapping("/reissue")
-    public ResponseEntity<TokenResponse> reissue(@RequestBody RefreshTokenRequest request) {
-        TokenResponse tokenResponse = authService.reissue(request.getRefreshToken());
+    public ResponseEntity<TokenResponse> reissue(@Valid @RequestBody RefreshTokenRequest request) {
+        TokenResponse tokenResponse = authService.reissue(request.refreshToken());
         return ResponseEntity.ok(tokenResponse);
     }
 

@@ -6,8 +6,6 @@ import org.example.communityapi.member.dto.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -33,9 +31,9 @@ public class MemberController {
     // 내 정보 조회 API (토큰)
     @GetMapping("/me")
     public ResponseEntity<MemberMyProfileResponse> getMyInfo(
-            @AuthenticationPrincipal User user
+            Authentication authentication
     ) {
-        String email = user.getUsername();
+        String email = authentication.getName();
         MemberMyProfileResponse response = memberService.getMyProfileByEmail(email);
         return ResponseEntity.ok(response);
     }
@@ -43,11 +41,10 @@ public class MemberController {
     // 내 정보 수정 API (토큰)
     @PatchMapping("/me")
     public ResponseEntity<Void> updateMyProfile(
-            @AuthenticationPrincipal String email,
-            @Valid
-            @RequestBody MemberUpdateRequest request
+            Authentication authentication,
+            @Valid @RequestBody MemberUpdateRequest request
     ) {
-        memberService.updateMyProfile(email, request);
+        memberService.updateMyProfile(authentication.getName(), request);
         return ResponseEntity.ok().build();
     }
 

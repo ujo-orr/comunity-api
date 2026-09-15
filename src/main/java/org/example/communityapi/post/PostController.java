@@ -1,5 +1,6 @@
 package org.example.communityapi.post;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.example.communityapi.post.dto.PostCreateRequest;
@@ -22,10 +23,11 @@ public class PostController {
     private final PostService postService;
 
     // 게시글 작성 API
+    @PostMapping
     public ResponseEntity<Long> createPost(
-            @RequestBody PostCreateRequest request,
+            @Valid @RequestBody PostCreateRequest request,
             Authentication authentication) {
-                String email = authentication.getName();
+        String email = authentication.getName();
         Long postId = postService.createPost(request, email);
         return ResponseEntity.ok(postId);
     }
@@ -52,7 +54,7 @@ public class PostController {
     @PatchMapping("/{id}")
     public ResponseEntity<Void> updatePost(
             @PathVariable Long id,
-            @RequestBody PostUpdateRequest request,
+            @Valid @RequestBody PostUpdateRequest request,
             Authentication authentication) {
         String email = authentication.getName();
         postService.updatePost(id, request, email);
@@ -69,4 +71,3 @@ public class PostController {
         return ResponseEntity.ok().build();
     }
 }
-

@@ -2,7 +2,6 @@ package org.example.communityapi.member.admin;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
-import org.example.communityapi.member.MemberService;
 import org.example.communityapi.member.admin.dto.AdminMemberResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +13,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminMemberController {
     private final AdminMemberService adminMemberService;
-    private final MemberService memberService;
 
     // 전체 회원 조회 (관리자 전용 DTO 리스트 반환)
     @GetMapping("/members")
@@ -43,7 +41,6 @@ public class AdminMemberController {
     // 회원 차단
     @PatchMapping("/ban/{id}")
     public ResponseEntity<Void> banMember(
-            @NotBlank(message = "id를 입력해 주세요")
             @PathVariable Long id) {
         adminMemberService.banMember(id);
         return ResponseEntity.ok().build();
@@ -52,7 +49,6 @@ public class AdminMemberController {
     // 차단 해제
     @PatchMapping("/unban/{id}")
     public ResponseEntity<Void> unbanMember(
-            @NotBlank(message = "id를 입력해 주세요")
             @PathVariable Long id) {
         adminMemberService.unbanMember(id);
         return ResponseEntity.ok().build();

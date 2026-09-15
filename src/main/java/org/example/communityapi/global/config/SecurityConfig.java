@@ -55,7 +55,7 @@ public class SecurityConfig {
 
                         // Role-based endpoints
                         .requestMatchers("/api/v1/superadmin/**").hasRole("SUPERADMIN")
-                        .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "SUPERADMIN")
+                        .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPERADMIN")
 
                         .anyRequest().authenticated()
                 )

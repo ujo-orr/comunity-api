@@ -6,7 +6,6 @@ import org.example.communityapi.category.dto.CategoryResponse;
 import org.example.communityapi.category.dto.CategoryUpdateRequest;
 import org.example.communityapi.global.error.BusinessException;
 import org.example.communityapi.global.error.ErrorCode;
-import org.example.communityapi.member.Member;
 import org.example.communityapi.post.PostRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +37,10 @@ public class CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
+        if (!category.getName().equals(request.name()) && categoryRepository.existsByName(request.name())) {
+            throw new BusinessException(ErrorCode.DUPLICATE_CATEGORY_NAME);
+        }
+
         category.updateCategory(request.name());
     }
 
@@ -46,14 +49,6 @@ public class CategoryService {
                 .stream()
                 .map(CategoryResponse::from)
                 .toList();
-    }
-
-    @Transactional
-    public void updateCategory2(Long id, CategoryUpdateRequest request) {
-        Category category = categoryRepository.findById(id).orElseThrow(() ->
-                        new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
-
-        category.updateCategory(request.name());
     }
 
     @Transactional

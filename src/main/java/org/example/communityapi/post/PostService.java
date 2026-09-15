@@ -74,7 +74,7 @@ public class PostService {
             PostUpdateRequest request,
             String email
     ) {
-        Post post = postRepository.findById(id)
+        Post post = postRepository.findByIdWithMember(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
         post.validateWriter(email);
@@ -94,7 +94,7 @@ public class PostService {
     @Transactional
     public void deletePost(Long id, String email) {
 
-        Post post = postRepository.findById(id)
+        Post post = postRepository.findByIdWithMember(id)
                 .orElseThrow(() ->
                         new BusinessException(ErrorCode.POST_NOT_FOUND));
 

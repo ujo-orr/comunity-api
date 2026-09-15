@@ -75,7 +75,7 @@ public class AuthService {
     // 로그인
     @Transactional
     public AuthLoginResponse login(MemberLoginRequest request) {
-        Optional<Member> memberOpt = memberRepository.findByEmail(request.getEmail());
+        Optional<Member> memberOpt = memberRepository.findByEmail(request.email());
 
         if (memberOpt.isPresent()) {
             Member member = memberOpt.get();
@@ -84,25 +84,25 @@ public class AuthService {
                 throw new BusinessException(ErrorCode.BANNED_USER);
             }
 
-            if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
+            if (!passwordEncoder.matches(request.password(), member.getPassword())) {
                 throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
             }
 
             TokenResponse tokenResponse = createSaveTokens(member.getEmail(), member.getRole());
 
             return AuthLoginResponse.success(
-                    tokenResponse.getAccessToken(),
-                    tokenResponse.getRefreshToken()
+                    tokenResponse.accessToken(),
+                    tokenResponse.refreshToken()
             );
         }
 
         // 탈퇴 유예 계정 확인
-        Optional<MemberWithdrawal> withdrawalOpt = memberWithdrawalRepository.findByEmail(request.getEmail());
+        Optional<MemberWithdrawal> withdrawalOpt = memberWithdrawalRepository.findByEmail(request.email());
 
         if (withdrawalOpt.isPresent()) {
             MemberWithdrawal withdrawal = withdrawalOpt.get();
 
-            if (!passwordEncoder.matches(request.getPassword(), withdrawal.getPassword())) {
+            if (!passwordEncoder.matches(request.password(), withdrawal.getPassword())) {
                 throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
             }
 
