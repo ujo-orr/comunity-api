@@ -18,6 +18,8 @@ import org.example.communityapi.global.error.BusinessException;
 import org.example.communityapi.global.error.ErrorCode;
 import org.example.communityapi.member.Member;
 import org.example.communityapi.post.Post;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "comments")
@@ -31,6 +33,7 @@ public class Comment extends BaseTimeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Post post;
 
     @ManyToOne(fetch = FetchType.LAZY)
