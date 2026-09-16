@@ -12,7 +12,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import org.example.communityapi.global.dto.PageResponse;
+import org.example.communityapi.global.dto.PageRequestParams;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -32,22 +33,27 @@ public class PostController {
         return ResponseEntity.ok(postId);
     }
 
-    // 게시글 닉네임으로 조회 API
-    @GetMapping("/{nickname}")
-    public ResponseEntity<List<PostResponse>> getPostsByNickname(
-            @NotBlank(message = "검색어를 입력해 주세요.")
-            @PathVariable String nickname) {
-        List<PostResponse> response = postService.getPostsByNickname(nickname);
-        return ResponseEntity.ok(response);
+    @GetMapping("/{id}")
+    public ResponseEntity<PostResponse> getPost(@PathVariable Long id) {
+        return ResponseEntity.ok(postService.getPost(id));
     }
 
-    // 3. 게시글 다건 조회 (제목 검색어 파라미터 옵션 지원)
-    @GetMapping("/search")
-    public ResponseEntity<List<PostResponse>> getPosts(
-            @RequestParam(required = false) String title
-    ) {
-        List<PostResponse> response = postService.getPosts(title);
-        return ResponseEntity.ok(response);
+    @GetMapping("/by-nickname/{nickname}")
+    public ResponseEntity<PageResponse<PostResponse>> getPostsByNickname(
+            @NotBlank(message = "검색어를 입력해 주세요.") @PathVariable String nickname,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(PageResponse.from(
+                postService.getPostsByNickname(nickname, PageRequestParams.of(page, size))));
+    }
+
+    @GetMapping({"", "/search"})
+    public ResponseEntity<PageResponse<PostResponse>> getPosts(
+            @RequestParam(required = false) String title,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(PageResponse.from(
+                postService.getPosts(title, PageRequestParams.of(page, size))));
     }
 
     // 4. 게시글 수정

@@ -13,7 +13,8 @@ import org.example.communityapi.post.PostRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -40,11 +41,11 @@ public class CommentService {
         return commentRepository.save(comment).getId();
     }
 
-    public List<CommentResponse> getComments(Long postId) {
+    public Page<CommentResponse> getComments(Long postId, Pageable pageable) {
         if (!postRepository.existsById(postId)) {
             throw new BusinessException(ErrorCode.POST_NOT_FOUND);
         }
-        return commentRepository.findResponsesByPostId(postId);
+        return commentRepository.findResponsesByPostId(postId, pageable);
     }
 
     @Transactional

@@ -18,7 +18,8 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.StringUtils;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -53,24 +54,33 @@ public class PostService {
         return postRepository.save(post).getId();
     }
 
+    @Transactional
+    public PostResponse getPost(Long id) {
+        if (postRepository.incrementViewCount(id) == 0) {
+            throw new BusinessException(ErrorCode.POST_NOT_FOUND);
+        }
+        return postRepository.findResponseById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
+    }
+
     // 특정 회원의 게시글 조회
-    public List<PostResponse> getPostsByNickname(String nickname) {
+    public Page<PostResponse> getPostsByNickname(String nickname, Pageable pageable) {
 
         if (!memberRepository.existsByNickname(nickname)) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
-        return postRepository.findByMemberNickname(nickname);
+        return postRepository.findByMemberNickname(nickname, pageable);
     }
 
     // 게시글 검색
-    public List<PostResponse> getPosts(String title) {
+    public Page<PostResponse> getPosts(String title, Pageable pageable) {
 
         if (StringUtils.hasText(title)) {
-            return postRepository.findByTitle(title);
+            return postRepository.findByTitle(title, pageable);
         }
 
-        return postRepository.findAllPosts();
+        return postRepository.findAllPosts(pageable);
     }
 
     // 게시글 수정

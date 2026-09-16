@@ -36,10 +36,10 @@ public class PostAttachment extends BaseTimeEntity {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Post post;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String originalFileName;
 
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(nullable = false, unique = true)
     private String storageKey;
 
     @Column(length = 100)

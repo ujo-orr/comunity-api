@@ -10,7 +10,9 @@ import org.example.communityapi.global.entity.BaseTimeEntity;
 import org.example.communityapi.global.error.BusinessException;
 import org.example.communityapi.global.error.ErrorCode;
 import org.example.communityapi.member.Member;
+import org.hibernate.annotations.DynamicUpdate;
 
+@DynamicUpdate
 @Entity
 @Table(name = "POSTS")
 @Getter
