@@ -6,6 +6,13 @@ spring:
   batch:
     job:
       enabled: false # 서버 실행시 batch 자동실행 방지
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+file:
+  upload-dir: ${FILE_UPLOAD_DIR:./uploads}
 
 jwt:
   secret: ${JWT_SECRET}

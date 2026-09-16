@@ -1,6 +1,8 @@
 package org.example.communityapi.post;
 
 import lombok.RequiredArgsConstructor;
+import org.example.communityapi.attachment.FileStorageService;
+import org.example.communityapi.attachment.PostAttachmentRepository;
 import org.example.communityapi.category.Category;
 import org.example.communityapi.category.CategoryRepository;
 import org.example.communityapi.global.error.BusinessException;
@@ -12,6 +14,8 @@ import org.example.communityapi.post.dto.PostResponse;
 import org.example.communityapi.post.dto.PostUpdateRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -24,6 +28,8 @@ public class PostService {
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
     private final CategoryRepository categoryRepository;
+    private final PostAttachmentRepository attachmentRepository;
+    private final FileStorageService fileStorageService;
 
     // 게시글 작성
     @Transactional
@@ -100,6 +106,17 @@ public class PostService {
 
         post.validateWriter(email);
 
+        // FK cascade는 첨부파일 메타데이터를 지우고, 실제 파일은 커밋 뒤에 제거한다.
+        // 롤백된 게시글 삭제 때문에 파일만 먼저 사라지는 일을 막는다.
+        var storageKeys = attachmentRepository.findByPostId(id).stream()
+                .map(attachment -> attachment.getStorageKey())
+                .toList();
         postRepository.delete(post);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                storageKeys.forEach(fileStorageService::deleteQuietly);
+            }
+        });
     }
 }

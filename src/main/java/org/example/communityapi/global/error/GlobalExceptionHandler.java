@@ -7,6 +7,8 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 @Slf4j
 @RestControllerAdvice
@@ -49,6 +51,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(ErrorResponse.of(errorCode));
+    }
+
+    @ExceptionHandler({MaxUploadSizeExceededException.class, MissingServletRequestPartException.class})
+    protected ResponseEntity<ErrorResponse> handleMultipartException(Exception e) {
+        return ResponseEntity
+                .status(ErrorCode.INVALID_FILE.getStatus())
+                .body(ErrorResponse.of(ErrorCode.INVALID_FILE));
     }
 
     // 기타 예외

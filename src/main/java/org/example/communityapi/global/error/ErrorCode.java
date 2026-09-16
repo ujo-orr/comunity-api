@@ -26,7 +26,10 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "존재하지 않는 회원입니다."),
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "E001", "존재하지 않는 카테고리입니다."),
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "E002", "존재하지 않는 게시글입니다."),
+    ATTACHMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "E008", "존재하지 않는 첨부파일입니다."),
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "E005", "존재하지 않는 댓글입니다."),
+
+    INVALID_FILE(HttpStatus.BAD_REQUEST, "E009", "첨부할 수 없는 파일입니다."),
 
     // 409 Conflict 중복
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U002", "이미 존재하는 이메일입니다."),
@@ -38,7 +41,8 @@ public enum ErrorCode {
     POST_LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "E007", "좋아요 기록이 존재하지 않습니다."),
 
     // 500 Internal Server Error
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S001", "서버 내부 에러가 발생했습니다. 관리자에게 문의하세요.");
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S001", "서버 내부 에러가 발생했습니다. 관리자에게 문의하세요."),
+    FILE_STORAGE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S002", "파일을 저장하거나 읽는 중 오류가 발생했습니다.");
 
     private final HttpStatus status;
     private final String code;
