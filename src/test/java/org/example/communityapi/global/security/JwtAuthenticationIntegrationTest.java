@@ -91,7 +91,7 @@ class JwtAuthenticationIntegrationTest {
 
     @Test
     void redisFailureReturnsServiceUnavailable() throws Exception {
-        when(valueOperations.get(anyString())).thenThrow(new IllegalStateException("redis unavailable"));
+        when(valueOperations.get(anyString())).thenThrow(new org.springframework.data.redis.RedisConnectionFailureException("redis unavailable"));
         mvc.perform(get("/api/members/me").header("Authorization", "Bearer " + token))
                 .andExpect(status().isServiceUnavailable())
                 .andDo(print()).andExpect(jsonPath("code").value("S003"));

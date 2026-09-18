@@ -12,6 +12,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.example.communityapi.global.error.ErrorCode;
+import org.example.communityapi.global.error.StorageExceptionClassifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.TransactionException;
 import org.example.communityapi.global.error.ErrorResponse;
 import org.example.communityapi.member.Member;
 import org.example.communityapi.member.MemberRepository;
@@ -55,58 +58,56 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (StringUtils.hasText(token)) {
             try {
-                // 먼저 서명과 만료 시간을 검증한다.
-                Claims claims = jwtTokenProvider.getClaimsFromToken(token);
-                String email = claims.getSubject();
-                String role = claims.get("role", String.class);
-
-                // Refresh Token이 Access Token 자리에 들어오는 것을 막는다.
-                if (!StringUtils.hasText(email) || !StringUtils.hasText(role)) {
-                    SecurityContextHolder.clearContext();
-                    filterChain.doFilter(request, response);
-                    return;
-                }
-
-                // Redis 장애 시 로그아웃된 토큰을 판별할 수 없으므로 인증 요청을 거절한다.
-                boolean blacklisted;
-                try {
-                    blacklisted = isBlacklisted(token);
-                } catch (RuntimeException e) {
-                    log.error("JWT 블랙리스트 조회 실패", e);
-                    SecurityContextHolder.clearContext();
-                    writeAuthenticationUnavailable(response);
-                    return;
-                }
-                if (blacklisted) {
-                    log.debug("로그아웃된 JWT 사용 시도");
-                    SecurityContextHolder.clearContext();
-                    filterChain.doFilter(request, response);
-                    return;
-                }
-
-                // 차단, 탈퇴 또는 권한 변경 후에 발급 전 토큰이 계속 쓰이지 않도록 한다.
-                Member member = memberRepository.findByEmail(email).orElse(null);
-                if (member == null || member.getStatus() != MemberStatus.ACTIVE
-                        || !member.getRole().name().equals(role)) {
-                    SecurityContextHolder.clearContext();
-                    filterChain.doFilter(request, response);
-                    return;
-                }
-
-                UsernamePasswordAuthenticationToken authentication = getAuthentication(role, email);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            } catch (JwtException | IllegalArgumentException e) {
-                log.debug("유효하지 않은 JWT: {}", e.getMessage());
+                authenticate(token);
+            } catch (JwtException e) {
+                log.debug("유효하지 않은 JWT");
                 SecurityContextHolder.clearContext();
+            } catch (DataAccessException | TransactionException e) {
+                ErrorCode code = StorageExceptionClassifier.classify(e);
+                if (code == ErrorCode.STORAGE_SERVICE_UNAVAILABLE) {
+                    code = ErrorCode.AUTHENTICATION_SERVICE_UNAVAILABLE;
+                }
+                log.error("JWT 인증 저장소 처리 실패: {}", code.getCode(), e);
+                SecurityContextHolder.clearContext();
+                writeError(response, code);
+                return;
+            } catch (RuntimeException e) {
+                log.error("JWT 인증 처리 실패", e);
+                SecurityContextHolder.clearContext();
+                writeError(response, ErrorCode.INTERNAL_SERVER_ERROR);
+                return;
             }
         }
-
         filterChain.doFilter(request, response);
     }
 
-    private void writeAuthenticationUnavailable(HttpServletResponse response) throws IOException {
-        ErrorCode errorCode = ErrorCode.AUTHENTICATION_SERVICE_UNAVAILABLE;
+    private void authenticate(String token) {
+        Claims claims;
+        try {
+            claims = jwtTokenProvider.getClaimsFromToken(token);
+        } catch (IllegalArgumentException e) {
+            throw new JwtException("Invalid token", e);
+        }
+        String email = claims.getSubject();
+        String role = claims.get("role", String.class);
+        if (!StringUtils.hasText(email) || !StringUtils.hasText(role) || isBlacklisted(token)) {
+            SecurityContextHolder.clearContext();
+            return;
+        }
+
+        Member member = memberRepository.findByEmail(email).orElse(null);
+        if (member == null || member.getStatus() != MemberStatus.ACTIVE
+                || !member.getRole().name().equals(role)) {
+            SecurityContextHolder.clearContext();
+            return;
+        }
+        SecurityContextHolder.getContext().setAuthentication(getAuthentication(role, email));
+    }
+
+    private void writeError(HttpServletResponse response, ErrorCode errorCode) throws IOException {
+        if (response.isCommitted()) {
+            return;
+        }
         response.setStatus(errorCode.getStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());

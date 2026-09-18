@@ -41,11 +41,12 @@ public class ErrorResponse {
         private final String value;
         private final String reason;
 
+        // 비밀번호, 토큰, 개인정보가 응답에 포함되지 않도록 입력값은 반사하지 않는다.
         public static List<FieldErrorDetail> of(BindingResult bindingResult) {
             return bindingResult.getFieldErrors().stream()
                     .map(error -> FieldErrorDetail.builder()
                             .field(error.getField())
-                            .value(error.getRejectedValue() == null ? "" : error.getRejectedValue().toString())
+                            .value("")
                             .reason(error.getDefaultMessage())
                             .build())
                     .toList();

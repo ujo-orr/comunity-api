@@ -26,7 +26,7 @@ public class FileStorageService {
             this.uploadDirectory = Path.of(uploadDir).toAbsolutePath().normalize();
             Files.createDirectories(this.uploadDirectory);
         } catch (IOException e) {
-            throw new BusinessException(ErrorCode.FILE_STORAGE_ERROR);
+            throw new BusinessException(ErrorCode.FILE_STORAGE_ERROR, e);
         }
     }
 
@@ -40,7 +40,7 @@ public class FileStorageService {
             return storageKey;
         } catch (IOException e) {
             deleteQuietly(storageKey);
-            throw new BusinessException(ErrorCode.FILE_STORAGE_ERROR);
+            throw new BusinessException(ErrorCode.FILE_STORAGE_ERROR, e);
         }
     }
 
@@ -56,7 +56,7 @@ public class FileStorageService {
         try {
             Files.deleteIfExists(resolve(storageKey));
         } catch (IOException e) {
-            // DB 트랜잭션은 이미 완료된 뒤일 수 있으므로, 재시도 가능한 로그를 남긴다.
+            // DB 트랜잭션은 이미 완료된 뒤일 수 있으므로 재시도 가능한 로그를 남긴다.
             log.error("Failed to delete attachment file: {}", storageKey, e);
         }
     }
