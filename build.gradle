@@ -18,6 +18,13 @@ repositories {
     mavenCentral()
 }
 
+configurations {
+    byteBuddyAgent {
+        canBeConsumed = false
+        transitive = false
+    }
+}
+
 dependencies {
     // Web & Validation
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -53,9 +60,39 @@ dependencies {
     // 7. Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:mysql'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // Spring Boot가 관리하는 Byte Buddy 버전을 테스트 에이전트에도 사용
+    byteBuddyAgent 'net.bytebuddy:byte-buddy-agent'
+}
+
+tasks.withType(Test).configureEach {
+    // Mockito 5.11의 에이전트를 JVM 시작 시 연결해 동적 로딩
+    jvmArgs "-javaagent:${configurations.byteBuddyAgent.singleFile.absolutePath}"
+    // Mockito의 클래스 로딩 변경과 충돌하는 CDS는 테스트 JVM에서만 끔
+    jvmArgs '-Xshare:off'
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        showStandardStreams = true
+    }
 }
 
 tasks.named('test') {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags 'docker'
+    }
+}
+
+tasks.register('dockerTest', Test) {
+    description = 'Runs integration tests against disposable MySQL and Redis containers.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'docker'
+    }
+    // Spring Boot 3.3의 Testcontainers 1.19가 Docker Engine 29에 쓰는 구형 API를 보정
+    systemProperty 'api.version', '1.44'
+    shouldRunAfter tasks.named('test')
 }

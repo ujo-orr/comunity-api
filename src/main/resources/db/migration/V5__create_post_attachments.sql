@@ -5,8 +5,7 @@ CREATE TABLE post_attachments (
     storage_key VARCHAR(255) NOT NULL UNIQUE,
     content_type VARCHAR(100),
     file_size BIGINT NOT NULL,
-    created_at DATETIME(6) NOT NULL,
-
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     CONSTRAINT fk_post_attachments_post
         FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

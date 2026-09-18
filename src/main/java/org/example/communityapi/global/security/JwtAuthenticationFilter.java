@@ -1,5 +1,6 @@
 package org.example.communityapi.global.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -10,16 +11,23 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.example.communityapi.global.error.ErrorCode;
+import org.example.communityapi.global.error.ErrorResponse;
+import org.example.communityapi.member.Member;
+import org.example.communityapi.member.MemberRepository;
+import org.example.communityapi.member.MemberStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
+import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Slf4j
@@ -29,15 +37,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final StringRedisTemplate stringRedisTemplate;
+    private final MemberRepository memberRepository;
+    private final ObjectMapper objectMapper;
 
     private boolean isBlacklisted(String token) {
-        try {
-            String isLogout = stringRedisTemplate.opsForValue().get(token);
-            return "logout".equals(isLogout);
-        } catch (Exception e) {
-            log.error("Redis 조회 중 에러 발생: {}", e.getMessage());
-            return false; // Redis 장애 시 서비스 전체 중단을 막기 위해 통과 처리
-        }
+        return "logout".equals(stringRedisTemplate.opsForValue().get(token));
     }
 
     @Override
@@ -51,28 +55,44 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (StringUtils.hasText(token)) {
             try {
-                // 1. Redis 블랙리스트(로그아웃 여부) 확인
-                if (isBlacklisted(token)) {
+                // 먼저 서명과 만료 시간을 검증한다.
+                Claims claims = jwtTokenProvider.getClaimsFromToken(token);
+                String email = claims.getSubject();
+                String role = claims.get("role", String.class);
+
+                // Refresh Token이 Access Token 자리에 들어오는 것을 막는다.
+                if (!StringUtils.hasText(email) || !StringUtils.hasText(role)) {
+                    SecurityContextHolder.clearContext();
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
+                // Redis 장애 시 로그아웃된 토큰을 판별할 수 없으므로 인증 요청을 거절한다.
+                boolean blacklisted;
+                try {
+                    blacklisted = isBlacklisted(token);
+                } catch (RuntimeException e) {
+                    log.error("JWT 블랙리스트 조회 실패", e);
+                    SecurityContextHolder.clearContext();
+                    writeAuthenticationUnavailable(response);
+                    return;
+                }
+                if (blacklisted) {
                     log.debug("로그아웃된 JWT 사용 시도");
                     SecurityContextHolder.clearContext();
                     filterChain.doFilter(request, response);
                     return;
                 }
 
-                // 2. Claims 파싱 (만료/위조 체크)
-                Claims claims = jwtTokenProvider.getClaimsFromToken(token);
-                String email = claims.getSubject();
-                String role = claims.get("role", String.class);
-
-                // Refresh Token이 Access Token 자리에 들어오는 것 방지 (role 존재 여부 확인)
-                if (!StringUtils.hasText(email) || !StringUtils.hasText(role)) {
-                    log.debug("JWT에 필수 Claims(email/role)가 누락되었습니다.");
+                // 차단, 탈퇴 또는 권한 변경 후에 발급 전 토큰이 계속 쓰이지 않도록 한다.
+                Member member = memberRepository.findByEmail(email).orElse(null);
+                if (member == null || member.getStatus() != MemberStatus.ACTIVE
+                        || !member.getRole().name().equals(role)) {
                     SecurityContextHolder.clearContext();
                     filterChain.doFilter(request, response);
                     return;
                 }
 
-                // 3. Authentication 객체 생성 및 Context 저장
                 UsernamePasswordAuthenticationToken authentication = getAuthentication(role, email);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -83,6 +103,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void writeAuthenticationUnavailable(HttpServletResponse response) throws IOException {
+        ErrorCode errorCode = ErrorCode.AUTHENTICATION_SERVICE_UNAVAILABLE;
+        response.setStatus(errorCode.getStatus().value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        objectMapper.writeValue(response.getOutputStream(), ErrorResponse.of(errorCode));
     }
 
     private static UsernamePasswordAuthenticationToken getAuthentication(String role, String email) {

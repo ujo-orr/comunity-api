@@ -42,7 +42,8 @@ public enum ErrorCode {
 
     // 500 Internal Server Error
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S001", "서버 내부 에러가 발생했습니다. 관리자에게 문의하세요."),
-    FILE_STORAGE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S002", "파일을 저장하거나 읽는 중 오류가 발생했습니다.");
+    FILE_STORAGE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S002", "파일을 저장하거나 읽는 중 오류가 발생했습니다."),
+    AUTHENTICATION_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "S003", "인증 서비스를 일시적으로 사용할 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

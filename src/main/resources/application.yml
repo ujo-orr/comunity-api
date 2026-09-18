@@ -1,8 +1,10 @@
 spring:
   application:
     name: community-api
-  profiles:
-    active: local
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   batch:
     job:
       enabled: false # 서버 실행시 batch 자동실행 방지
@@ -14,14 +16,16 @@ spring:
 file:
   upload-dir: ${FILE_UPLOAD_DIR:./uploads}
 
+bootstrap:
+  admin:
+    enabled: ${BOOTSTRAP_ADMIN_ENABLED:false}
+  superadmin:
+    enabled: ${BOOTSTRAP_SUPERADMIN_ENABLED:false}
+
 jwt:
   secret: ${JWT_SECRET}
   access-expiration-ms: 3600000 # 한시간 3600000
   refresh-expiration-ms: 1209600000 # 14일
-
-logging:
-  level:
-    org.hibernate.orm.jdbc.bind: TRACE
 
 ---
 # H2 DB (테스트용) URL : localhost:8080/h2-console
@@ -53,6 +57,11 @@ spring:
   flyway:
     enabled: false # H2 로컬 테스트 끝나면 켜기
 
+# 로컬 개발 환경에서만 SQL 바인딩 값을 출력한다.
+logging:
+  level:
+    org.hibernate.orm.jdbc.bind: TRACE
+
 ---
 # MySQL DB (배포용)
 spring:
@@ -79,15 +88,10 @@ spring:
     activate:
       on-profile: docker
   datasource:
-    url: jdbc:mysql://localhost:3306/community?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: root
-    password: root
+    url: ${DB_URL:jdbc:mysql://localhost:3306/community?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
-
-  data:
-    redis:
-      host: localhost
-      port: 6379
 
   jpa:
     hibernate:

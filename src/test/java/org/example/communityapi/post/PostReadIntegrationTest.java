@@ -107,16 +107,24 @@ class PostReadIntegrationTest {
     // 검색 필터 동장, 빈 페이지, 잘못된 검색어
     @Test
     void filtersAndEmptyPages() throws Exception {
+
+        // 특정 제목에 해당하는 게시글 검색
         mvc.perform(get("/api/posts/search").param("title", "paging 1"))
                 .andExpect(status().isOk()).andExpect(jsonPath("totalElements").value(1))
                 .andExpect(jsonPath("content[0].id").value(postIds.get(1)))
                 .andExpect(jsonPath("page").value(0)).andExpect(jsonPath("size").value(20));
-        mvc.perform(get("/api/posts").param("title", "missing"))
+
+        // 검색어와 일치하는 게시글이 없는 경우
+        mvc.perform(get("/api/posts").param("title", "none"))
                 .andExpect(status().isOk()).andExpect(jsonPath("content").isEmpty())
                 .andExpect(jsonPath("totalElements").value(0));
+
+        // 데이터가 있는 범위를 넘어선 페이지 요청
         mvc.perform(get("/api/posts").param("page", "100"))
                 .andExpect(status().isOk()).andExpect(jsonPath("content").isEmpty())
                 .andExpect(jsonPath("totalElements").value(3));
+
+        // 공백 검색어는 제목 필터 없이 조회
         mvc.perform(get("/api/posts").param("title", " "))
                 .andExpect(status().isOk()).andExpect(jsonPath("totalElements").value(3));
     }
@@ -124,14 +132,20 @@ class PostReadIntegrationTest {
     // 댓글 페이징, 오름차순
     @Test
     void commentsArePagedOldestFirstAndScopedToPost() throws Exception {
+
+        // 첫 번째 게시글의 댓글 첫 페이지
         mvc.perform(get("/api/posts/{id}/comments", postIds.getFirst()).param("size", "2"))
                 .andExpect(status().isOk()).andExpect(jsonPath("content.length()").value(2))
                 .andExpect(jsonPath("content[0].id").value(commentIds.getFirst()))
                 .andExpect(jsonPath("content[1].id").value(commentIds.get(1)))
                 .andExpect(jsonPath("totalElements").value(3)).andExpect(jsonPath("last").value(false));
+
+        // 같은 게시글의 댓글 두 번째 페이지
         mvc.perform(get("/api/posts/{id}/comments", postIds.getFirst()).param("size", "2").param("page", "1"))
                 .andExpect(status().isOk()).andExpect(jsonPath("content[0].id").value(commentIds.getLast()))
                 .andExpect(jsonPath("last").value(true));
+
+        // 댓글을 저장하지 않은 다른 게시글
         mvc.perform(get("/api/posts/{id}/comments", postIds.getLast()))
                 .andExpect(status().isOk()).andExpect(jsonPath("totalElements").value(0));
     }
@@ -139,8 +153,10 @@ class PostReadIntegrationTest {
     // 지원하지 않는 자원
     @Test
     void missingResourcesReturn404() throws Exception {
-        for (String path : List.of("/api/posts/9223372036854775807",
-                "/api/posts/9223372036854775807/comments", "/api/posts/by-nickname/missing")) {
+        for (String path : List.of(
+                "/api/posts/9223372036854775807",
+                "/api/posts/9223372036854775807/comments",
+                "/api/posts/by-nickname/missing")) {
             mvc.perform(get(path)).andExpect(status().isNotFound());
         }
     }
@@ -148,11 +164,21 @@ class PostReadIntegrationTest {
     // 유효하지 않은 페이징 파라미터
     @Test
     void invalidPageParametersReturn400() throws Exception {
-        for (String path : List.of("/api/posts", "/api/posts/search", "/api/posts/by-nickname/12345",
-                "/api/posts/" + postIds.getFirst() + "/comments")) {
-            for (String[] param : List.of(new String[]{"page", "-1"}, new String[]{"size", "0"},
-                    new String[]{"size", "101"}, new String[]{"page", "abc"})) {
-                mvc.perform(get(path).param(param[0], param[1])).andExpect(status().isBadRequest())
+        for (String path : List.of(
+                "/api/posts",
+                "/api/posts/search",
+                "/api/posts/by-nickname/12345",
+                "/api/posts/" + postIds.getFirst() + "/comments"
+        )) {
+            for (String[] param : List.of(
+                    new String[]{"page", "-1"},
+                    new String[]{"size", "0"},
+                    new String[]{"size", "101"},
+                    new String[]{"page", "abc"}
+            )) {
+                mvc.perform(get(path)
+                                .param(param[0], param[1]))
+                        .andExpect(status().isBadRequest())
                         .andExpect(jsonPath("code").value("C001"));
             }
         }
@@ -163,12 +189,22 @@ class PostReadIntegrationTest {
     void concurrentReadsDoNotLoseIncrements() throws Exception {
         try (var executor = Executors.newFixedThreadPool(6)) {
             List<Future<?>> futures = new ArrayList<>();
+
             for (int i = 0; i < 30; i++) {
-                futures.add(executor.submit(() -> service.getPost(postIds.getFirst())));
+                futures.add(executor.submit(
+                        () -> service.getPost(postIds.getFirst())
+                ));
             }
-            for (Future<?> future : futures) future.get(20, TimeUnit.SECONDS);
+
+            for (Future<?> future : futures) {
+                future.get(20, TimeUnit.SECONDS);
+            }
         }
-        assertThat(posts.findById(postIds.getFirst()).orElseThrow().getViewCount()).isEqualTo(30);
+
+        assertThat(posts.findById(postIds.getFirst())
+                .orElseThrow()
+                .getViewCount())
+                .isEqualTo(30);
     }
 
     // 게시글 수정 시 이전 조회수 덮어쓰기 검증

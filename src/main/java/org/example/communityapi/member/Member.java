@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import org.example.communityapi.global.entity.BaseTimeEntity;
 
 @Entity
-@Table(name = "MEMBERS")
+@Table(name = "members")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseTimeEntity {

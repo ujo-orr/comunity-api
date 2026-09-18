@@ -14,7 +14,7 @@ import org.hibernate.annotations.DynamicUpdate;
 
 @DynamicUpdate
 @Entity
-@Table(name = "POSTS")
+@Table(name = "posts")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post extends BaseTimeEntity {
