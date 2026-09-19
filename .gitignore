@@ -36,6 +36,7 @@ uploads/
 *.p12
 *.jks
 app
+*.docs
 !**/src/main/**/out/
 !**/src/test/**/out/
 
