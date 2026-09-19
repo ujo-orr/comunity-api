@@ -48,3 +48,10 @@ app
 
 ### VS Code ###
 .vscode/
+
+### Deployment credentials ###
+.aws/
+credentials
+application-prod-secret.*
+*.tfstate
+*.tfstate.*

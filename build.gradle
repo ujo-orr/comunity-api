@@ -43,6 +43,9 @@ dependencies {
     runtimeOnly 'com.mysql:mysql-connector-j'
     runtimeOnly 'com.h2database:h2'
 
+    // 첨부파일 S3 저장 (AWS SDK v2의 S3 모듈만 추가)
+    implementation 'software.amazon.awssdk:s3:2.54.17'
+
     // 로그아웃한 토큰 보관
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 

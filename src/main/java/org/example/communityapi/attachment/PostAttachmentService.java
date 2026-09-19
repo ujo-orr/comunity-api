@@ -23,7 +23,7 @@ public class PostAttachmentService {
 
     private final PostAttachmentRepository attachmentRepository;
     private final PostRepository postRepository;
-    private final FileStorageService fileStorageService;
+    private final AttachmentStorage fileStorageService;
 
     @Transactional
     public List<AttachmentResponse> upload(Long postId, List<MultipartFile> files, String email) {
@@ -35,7 +35,7 @@ public class PostAttachmentService {
         post.validateWriter(email);
 
         List<String> storageKeys = new ArrayList<>();
-        // DB 저장이 취소되면 디스크에 먼저 저장한 파일도 지운다.
+        // DB 저장이 취소되면 저장소에 먼저 저장한 파일도 지운다.
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCompletion(int status) {

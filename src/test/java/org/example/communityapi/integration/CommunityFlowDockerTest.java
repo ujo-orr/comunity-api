@@ -148,16 +148,28 @@ class CommunityFlowDockerTest {
         assertThat(downloaded.getHeaders().getFirst("X-Content-Type-Options")).isEqualTo("nosniff");
         assertThat(downloaded.getBody()).isEqualTo(fileBytes);
 
+        ResponseEntity<String> profileBeforeLogout = http.exchange("/api/members/me",
+                HttpMethod.GET, new HttpEntity<>(authorization), String.class);
+        assertThat(profileBeforeLogout.getStatusCode()).isEqualTo(OK);
+
         ResponseEntity<Void> loggedOut = http.exchange("/api/auth/logout", HttpMethod.POST,
                 new HttpEntity<>(authorization), Void.class);
         assertThat(loggedOut.getStatusCode()).isEqualTo(OK);
         assertThat(redisTemplate.opsForValue().get(login.accessToken())).isEqualTo("logout");
         assertThat(redisTemplate.getExpire(login.accessToken(), TimeUnit.SECONDS)).isPositive();
 
-        ResponseEntity<String> rejected = http.exchange("/api/posts/" + postId,
+        // 게시글 조회는 공개 API이므로 로그아웃한 토큰으로도 익명 조회가 가능하다.
+        ResponseEntity<PostResponse> publicReadAfterLogout = http.exchange("/api/posts/" + postId,
+                HttpMethod.GET, new HttpEntity<>(authorization), PostResponse.class);
+        assertThat(publicReadAfterLogout.getStatusCode()).isEqualTo(OK);
+        assertThat(publicReadAfterLogout.getBody()).isNotNull();
+        assertThat(publicReadAfterLogout.getBody().viewCount()).isEqualTo(2);
+        assertThat(posts.findById(postId).orElseThrow().getViewCount()).isEqualTo(2);
+
+        // 같은 Access Token이 인증 필수 API에서는 더 이상 유효하지 않아야 한다.
+        ResponseEntity<String> rejected = http.exchange("/api/members/me",
                 HttpMethod.GET, new HttpEntity<>(authorization), String.class);
         assertThat(rejected.getStatusCode()).isEqualTo(UNAUTHORIZED);
-        assertThat(posts.findById(postId).orElseThrow().getViewCount()).isEqualTo(1);
 
         Integer appliedV5 = jdbc.queryForObject("""
                 SELECT COUNT(*) FROM flyway_schema_history

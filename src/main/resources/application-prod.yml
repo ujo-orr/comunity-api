@@ -1,0 +1,41 @@
+# 운영에서는 prod profile만 활성화한다.
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    defer-datasource-initialization: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+  sql:
+    init:
+      mode: never
+  batch:
+    jdbc:
+      initialize-schema: never
+  h2:
+    console:
+      enabled: false
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+file:
+  storage-type: s3
+  s3:
+    bucket: ${S3_BUCKET}
+    region: ${AWS_REGION}

@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -17,7 +17,8 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-public class FileStorageService {
+@ConditionalOnProperty(name = "file.storage-type", havingValue = "local", matchIfMissing = true)
+public class FileStorageService implements AttachmentStorage {
 
     private final Path uploadDirectory;
 
@@ -31,7 +32,7 @@ public class FileStorageService {
     }
 
     public String store(Long postId, MultipartFile file) {
-        validate(file);
+        AttachmentFileValidator.validate(file);
         String storageKey = "attachments/posts/" + postId + "/" + UUID.randomUUID();
         Path target = resolve(storageKey);
         try (var inputStream = file.getInputStream()) {
@@ -57,21 +58,6 @@ public class FileStorageService {
             Files.deleteIfExists(resolve(storageKey));
         } catch (IOException e) {
             log.error("Failed to delete attachment file: {}", storageKey, e);
-        }
-    }
-
-    private void validate(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new BusinessException(ErrorCode.INVALID_FILE);
-        }
-        String filename = file.getOriginalFilename();
-        if (!StringUtils.hasText(filename) || filename.length() > 255
-                || filename.equals(".") || filename.equals("..")
-                || filename.contains("/") || filename.contains("\\")
-                || filename.chars().anyMatch(Character::isISOControl)
-                || (file.getContentType() != null && file.getContentType().length() > 100)
-                || file.getSize() > 10L * 1024 * 1024) {
-            throw new BusinessException(ErrorCode.INVALID_FILE);
         }
     }
 

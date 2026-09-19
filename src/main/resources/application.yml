@@ -36,6 +36,7 @@ logging:
     org.hibernate.orm.jdbc.bind: OFF
 
 file:
+  storage-type: local
   upload-dir: ${FILE_UPLOAD_DIR:./uploads}
 
 bootstrap:
@@ -84,25 +85,6 @@ springdoc:
     enabled: true
   swagger-ui:
     enabled: true
-
----
-# 배포 환경
-spring:
-  config:
-    activate:
-      on-profile: prod
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: false
-  h2:
-    console:
-      enabled: false
 
 ---
 # 로컬 MySQL 테스트

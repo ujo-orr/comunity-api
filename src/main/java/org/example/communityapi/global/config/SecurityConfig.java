@@ -37,7 +37,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        boolean local = environment.matchesProfiles("local");
+        boolean prod = environment.matchesProfiles("prod");
+        boolean local = environment.matchesProfiles("local") && !prod;
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .headers(headers -> {
@@ -52,12 +53,12 @@ public class SecurityConfig {
                     } else {
                         auth.requestMatchers("/h2-console/**").denyAll();
                     }
-                    auth.requestMatchers(
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**"
-                        ).permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/members/signup", "/api/members/restore",
+                    if (prod) {
+                        auth.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").denyAll();
+                    } else {
+                        auth.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll();
+                    }
+                    auth.requestMatchers(HttpMethod.POST, "/api/members/signup", "/api/members/restore",
                                 "/api/auth/login", "/api/auth/reissue").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/members/search/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/posts", "/api/posts/{id}").permitAll()

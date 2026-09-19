@@ -1,7 +1,7 @@
 package org.example.communityapi.post;
 
 import lombok.RequiredArgsConstructor;
-import org.example.communityapi.attachment.FileStorageService;
+import org.example.communityapi.attachment.AttachmentStorage;
 import org.example.communityapi.attachment.PostAttachmentRepository;
 import org.example.communityapi.category.Category;
 import org.example.communityapi.category.CategoryRepository;
@@ -30,7 +30,7 @@ public class PostService {
     private final MemberRepository memberRepository;
     private final CategoryRepository categoryRepository;
     private final PostAttachmentRepository attachmentRepository;
-    private final FileStorageService fileStorageService;
+    private final AttachmentStorage fileStorageService;
 
     @Transactional
     public Long createPost(PostCreateRequest request, String userEmail) {
