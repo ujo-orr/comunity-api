@@ -31,6 +31,16 @@ class PostServiceUnitTest {
     @InjectMocks PostService service;
 
     @Test
+    void blankKeywordIsRejectedBeforeAnyRepositoryCall() {
+        for (String keyword : java.util.List.of("", " ", "\t\n")) {
+            assertThatThrownBy(() -> service.getPosts(keyword, org.springframework.data.domain.PageRequest.of(0, 20)))
+                    .isInstanceOfSatisfying(BusinessException.class,
+                            error -> assertThat(error.getErrorCode()).isEqualTo(ErrorCode.EMPTY_SEARCH_KEYWORD));
+        }
+        verifyNoInteractions(posts, members, categories, attachments, files);
+    }
+
+    @Test
     void writerCanUpdatePostAndCategory() {
         Member writer =
                 Member.builder()
@@ -90,7 +100,7 @@ class PostServiceUnitTest {
                 1L,
                 new PostUpdateRequest("changed", "changed body", 2L), "other@test.com"))
                 .isInstanceOfSatisfying(BusinessException.class,
-                        error -> assertThat(error.getErrorCode()).isEqualTo(ErrorCode.UNAUTHORIZED));
+                        error -> assertThat(error.getErrorCode()).isEqualTo(ErrorCode.ACCESS_DENIED));
 
         assertThat(post.getTitle()).isEqualTo("original");
         verifyNoInteractions(categories);

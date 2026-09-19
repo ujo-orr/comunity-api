@@ -8,7 +8,7 @@ public final class PageRequestParams {
     private PageRequestParams() {}
 
     public static PageRequest of(int page, int size) {
-        if (page < 0 || size < 1 || size > 100) {
+        if (page < 0 || size < 1 || size > 100 || (long) page * size > Integer.MAX_VALUE) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
         return PageRequest.of(page, size);

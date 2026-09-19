@@ -12,7 +12,7 @@ import java.util.List;
 @Getter
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@JsonInclude(JsonInclude.Include.NON_NULL) // errors 필드가 null이면 JSON 출력 시 자동 제외
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorResponse {
 
     private final String code;
@@ -41,7 +41,7 @@ public class ErrorResponse {
         private final String value;
         private final String reason;
 
-        // 비밀번호, 토큰, 개인정보가 응답에 포함되지 않도록 입력값은 반사하지 않는다.
+        // 비밀번호나 토큰이 섞일 수 있어서 입력값은 응답에 넣지 않음
         public static List<FieldErrorDetail> of(BindingResult bindingResult) {
             return bindingResult.getFieldErrors().stream()
                     .map(error -> FieldErrorDetail.builder()

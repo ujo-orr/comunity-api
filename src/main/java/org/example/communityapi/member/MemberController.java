@@ -1,6 +1,9 @@
 package org.example.communityapi.member;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.example.communityapi.member.dto.*;
 import org.springframework.http.HttpStatus;
@@ -14,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController {
     private final MemberService memberService;
 
-    // 회원가입 API
     @PostMapping("/signup")
     public ResponseEntity<Long> signUp(
             @Valid @RequestBody MemberSignUpRequest request) {
@@ -22,13 +24,14 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.CREATED).body(memberId);
     }
 
-    // 닉네임 기준 회원 조회 API
     @GetMapping("/search")
-    public ResponseEntity<MemberSearchResponse> getMemberProfile(@RequestParam String nickname) {
+    public ResponseEntity<MemberSearchResponse> getMemberProfile(
+            @NotBlank(message = "닉네임을 입력해주세요.")
+            @Size(max = 10, message = "닉네임은 10자 이하로 입력해주세요.")
+            @RequestParam String nickname) {
         return ResponseEntity.ok(memberService.getMemberInfoByNickname(nickname));
     }
 
-    // 내 정보 조회 API (토큰)
     @GetMapping("/me")
     public ResponseEntity<MemberMyProfileResponse> getMyInfo(
             Authentication authentication
@@ -38,7 +41,6 @@ public class MemberController {
         return ResponseEntity.ok(response);
     }
 
-    // 내 정보 수정 API (토큰)
     @PatchMapping("/me")
     public ResponseEntity<Void> updateMyProfile(
             Authentication authentication,
@@ -48,7 +50,6 @@ public class MemberController {
         return ResponseEntity.ok().build();
     }
 
-    // 본인 회원 탈퇴 (토큰)
     @DeleteMapping("/me")
     public ResponseEntity<Void> withdrawMember(
             Authentication authentication,
@@ -63,6 +64,9 @@ public class MemberController {
 
     @PostMapping("/restore")
     public ResponseEntity<Void> cancelWithdrawal(
+            @Email(message = "올바른 이메일 형식을 입력해주세요.")
+            @NotBlank(message = "이메일을 입력해주세요.")
+            @Size(max = 30, message = "이메일은 30자 이하로 입력해주세요.")
             @RequestParam String email,
             @Valid @RequestBody MemberWithdrawalRequest request
     ) {

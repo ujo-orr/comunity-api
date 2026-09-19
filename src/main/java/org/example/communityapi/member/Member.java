@@ -22,6 +22,9 @@ public class Member extends BaseTimeEntity {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
+    private int tokenVersion;
+
     @Column(nullable = false, unique = true, length = 20)
     private String nickname;
 
@@ -47,7 +50,6 @@ public class Member extends BaseTimeEntity {
         this.status = status != null ? status : MemberStatus.ACTIVE;
     }
 
-    // 회원 정보 수정 비즈니스 메서드
     public void updateProfile(String nickname, String phoneNumber, String newPassword) {
         if (org.springframework.util.StringUtils.hasText(nickname)) {
             this.nickname = nickname;
@@ -56,15 +58,25 @@ public class Member extends BaseTimeEntity {
             this.phoneNumber = phoneNumber;
         }
         if (org.springframework.util.StringUtils.hasText(newPassword)) {
+            if (!newPassword.equals(this.password)) {
+                this.tokenVersion++;
+            }
             this.password = newPassword;
         }
     }
 
     public void changeRole(Role newRole) {
+        if (this.role != newRole) {
+            this.tokenVersion++;
+        }
         this.role = newRole;
     }
 
     public void ban() {
+        // 정지를 해제해도 정지 전에 발급한 토큰은 다시 쓸 수 없다.
+        if (this.status != MemberStatus.BANNED) {
+            this.tokenVersion++;
+        }
         this.status = MemberStatus.BANNED;
     }
 

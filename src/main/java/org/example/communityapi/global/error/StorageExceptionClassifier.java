@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Set;
 
-/** 저장소 예외의 메시지를 노출하지 않고 원인 타입/SQL 코드로 분류한다. */
+// DB 오류 내용은 응답에 넣지 않고 종류만 구분
 public final class StorageExceptionClassifier {
     private StorageExceptionClassifier() {}
 
@@ -28,7 +28,7 @@ public final class StorageExceptionClassifier {
             }
             if (cause instanceof SQLException sql) {
                 String state = sql.getSQLState();
-                // H2/PostgreSQL 및 MySQL의 유일성/외래키 충돌만 409로 분류한다.
+                // 중복값이나 다른 데이터의 참조 때문에 실패한 경우
                 if ("23505".equals(state) || "23503".equals(state) || "23506".equals(state)
                         || ("23000".equals(state) && Set.of(1062, 1451, 1452).contains(sql.getErrorCode()))) {
                     return ErrorCode.DATA_CONFLICT;
@@ -44,7 +44,6 @@ public final class StorageExceptionClassifier {
         if (exception instanceof CannotCreateTransactionException) {
             return ErrorCode.STORAGE_SERVICE_UNAVAILABLE;
         }
-        // NOT NULL 위반, SQL 문법 오류 등은 클라이언트 충돌로 위장하지 않는다.
         return ErrorCode.INTERNAL_SERVER_ERROR;
     }
 }

@@ -7,10 +7,16 @@ import org.example.communityapi.member.MemberRepository;
 import org.example.communityapi.post.Post;
 import org.example.communityapi.post.PostRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.context.transaction.TestTransaction;
+import org.springframework.mock.web.MockMultipartFile;
+
+import java.nio.file.Path;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,6 +28,48 @@ class PostAttachmentTimestampIntegrationTest {
     @Autowired PostRepository posts;
     @Autowired PostAttachmentRepository attachments;
     @Autowired JdbcTemplate jdbc;
+    @TempDir Path uploadDirectory;
+
+    @Test
+    void rolledBackUploadDoesNotLeaveFileOnDisk() {
+        Member member = members.save(Member.builder()
+                .email("rollback@test.com")
+                .password("test")
+                .nickname("rollback")
+                .phoneNumber("01012345678")
+                .build());
+
+        Category category =
+                categories.save(Category.builder()
+                        .name("rollback").build());
+
+        Post post =
+                posts.save(Post.builder()
+                        .member(member)
+                        .category(category)
+                        .title("title")
+                        .content("content")
+                        .build());
+
+        FileStorageService storage = new FileStorageService(uploadDirectory.toString());
+        PostAttachmentService service = new PostAttachmentService(attachments, posts, storage);
+
+        var file = new MockMultipartFile(
+                "files",
+                "sample.txt",
+                "text/plain",
+                new byte[]{1});
+
+        service.upload(post.getId(), List.of(file), member.getEmail());
+        String key = attachments.findByPostId(post.getId()).getFirst().getStorageKey();
+        Path storedFile = uploadDirectory.resolve(key);
+        assertThat(storedFile).exists();
+
+        TestTransaction.flagForRollback();
+        TestTransaction.end();
+
+        assertThat(storedFile).doesNotExist();
+    }
 
     @Test
     void attachmentStoresUploadTimeWithoutModificationColumn() {

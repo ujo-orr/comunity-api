@@ -16,7 +16,6 @@ public class MemberWithdrawal extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Member 원복용 백업 데이터
     private Long originalId;
     private String email;
     private String password;
@@ -26,10 +25,9 @@ public class MemberWithdrawal extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    private LocalDateTime originalCreatedAt; // 최초 가입일 복원용
+    private LocalDateTime originalCreatedAt;
 
-    // 탈퇴 유예 관리 & 자동 파기용 데이터
-    private LocalDateTime expireAt;  // 데이터 영구 삭제(파기) 예정 일시
+    private LocalDateTime expireAt;
 
     public MemberWithdrawal(Member member) {
         this.originalId = member.getId();
@@ -40,8 +38,8 @@ public class MemberWithdrawal extends BaseTimeEntity {
         this.role = member.getRole();
         this.originalCreatedAt = member.getCreatedAt();
 
-        // 시간 기록
-        this.expireAt = LocalDateTime.now().plusDays(30); // 삭제 유예 만료일
+        // 30일 동안은 탈퇴를 취소할 수 있다.
+        this.expireAt = LocalDateTime.now().plusDays(30);
     }
 
     public Member toMember() {

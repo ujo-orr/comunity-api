@@ -1,0 +1,1 @@
+ALTER TABLE refresh_token MODIFY COLUMN token VARCHAR(512) NOT NULL;

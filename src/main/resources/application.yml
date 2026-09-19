@@ -5,13 +5,35 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
   batch:
     job:
-      enabled: false # 서버 실행시 batch 자동실행 방지
+      enabled: false # 서버를 켤 때는 배치를 실행하지 않음
+  sql:
+    init:
+      mode: never
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 50MB
+
+server:
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+# SQL에 들어가는 이메일, 비밀번호 같은 값은 로그에 남기지 않음
+logging:
+  level:
+    org.hibernate.orm.jdbc.bind: OFF
 
 file:
   upload-dir: ${FILE_UPLOAD_DIR:./uploads}
@@ -24,11 +46,11 @@ bootstrap:
 
 jwt:
   secret: ${JWT_SECRET}
-  access-expiration-ms: 3600000 # 한시간 3600000
+  access-expiration-ms: 3600000 # 1시간
   refresh-expiration-ms: 1209600000 # 14일
 
 ---
-# H2 DB (테스트용) URL : localhost:8080/h2-console
+# 로컬에서는 H2 사용
 spring:
   config:
     activate:
@@ -55,15 +77,16 @@ spring:
     init:
       mode: always
   flyway:
-    enabled: false # H2 로컬 테스트 끝나면 켜기
+    enabled: false # H2 테이블은 JPA가 생성
 
-# 로컬 개발 환경에서만 SQL 바인딩 값을 출력한다.
-logging:
-  level:
-    org.hibernate.orm.jdbc.bind: TRACE
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
 
 ---
-# MySQL DB (배포용)
+# 배포 환경
 spring:
   config:
     activate:
@@ -82,7 +105,7 @@ spring:
       enabled: false
 
 ---
-# Docker
+# 로컬 MySQL 테스트
 spring:
   config:
     activate:
@@ -104,3 +127,9 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

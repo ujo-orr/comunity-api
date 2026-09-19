@@ -56,14 +56,19 @@ public class FileStorageService {
         try {
             Files.deleteIfExists(resolve(storageKey));
         } catch (IOException e) {
-            // DB 트랜잭션은 이미 완료된 뒤일 수 있으므로 재시도 가능한 로그를 남긴다.
             log.error("Failed to delete attachment file: {}", storageKey, e);
         }
     }
 
     private void validate(MultipartFile file) {
-        if (file == null || file.isEmpty() || !StringUtils.hasText(file.getOriginalFilename())
-                || file.getOriginalFilename().length() > 255
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_FILE);
+        }
+        String filename = file.getOriginalFilename();
+        if (!StringUtils.hasText(filename) || filename.length() > 255
+                || filename.equals(".") || filename.equals("..")
+                || filename.contains("/") || filename.contains("\\")
+                || filename.chars().anyMatch(Character::isISOControl)
                 || (file.getContentType() != null && file.getContentType().length() > 100)
                 || file.getSize() > 10L * 1024 * 1024) {
             throw new BusinessException(ErrorCode.INVALID_FILE);

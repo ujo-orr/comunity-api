@@ -1,12 +1,15 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.3.5'
+    id 'org.springframework.boot' version '3.5.16'
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'org.example'
 version = '0.0.1-SNAPSHOT'
 description = 'community-api'
+
+// 파일 업로드 관련 보안 수정이 포함된 Tomcat 사용
+ext['tomcat.version'] = '10.1.60'
 
 java {
     toolchain {
@@ -26,51 +29,43 @@ configurations {
 }
 
 dependencies {
-    // Web & Validation
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-    // Security & JWT
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
 
-    // DB, ORM & Migration
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.flywaydb:flyway-core'
     implementation 'org.flywaydb:flyway-mysql'
     runtimeOnly 'com.mysql:mysql-connector-j'
     runtimeOnly 'com.h2database:h2'
 
-    // Redis
+    // 로그아웃한 토큰 보관
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-    // Batch
     implementation 'org.springframework.boot:spring-boot-starter-batch'
 
-    // Swagger API Docs
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.9.1'
 
-    // 6. Developer Tools & Lombok
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    // 7. Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:mysql'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    // Spring Boot가 관리하는 Byte Buddy 버전을 테스트 에이전트에도 사용
     byteBuddyAgent 'net.bytebuddy:byte-buddy-agent'
 }
 
 tasks.withType(Test).configureEach {
-    // Mockito 5.11의 에이전트를 JVM 시작 시 연결해 동적 로딩
+    // Mockito 에이전트는 테스트 시작 때 연결
     jvmArgs "-javaagent:${configurations.byteBuddyAgent.singleFile.absolutePath}"
-    // Mockito의 클래스 로딩 변경과 충돌하는 CDS는 테스트 JVM에서만 끔
+    // Mockito 실행 시 CDS 경고가 나지 않도록 설정
     jvmArgs '-Xshare:off'
     testLogging {
         events 'passed', 'skipped', 'failed'
@@ -92,7 +87,7 @@ tasks.register('dockerTest', Test) {
     useJUnitPlatform {
         includeTags 'docker'
     }
-    // Spring Boot 3.3의 Testcontainers 1.19가 Docker Engine 29에 쓰는 구형 API를 보정
+    // 현재 Testcontainers가 Docker 29에서도 실행되도록 API 버전 지정
     systemProperty 'api.version', '1.44'
     shouldRunAfter tasks.named('test')
 }

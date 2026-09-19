@@ -1,0 +1,75 @@
+package org.example.communityapi.attachment;
+
+import org.example.communityapi.global.error.BusinessException;
+import org.example.communityapi.global.error.ErrorCode;
+import org.example.communityapi.post.PostRepository;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+
+import java.nio.file.Path;
+import java.util.Collections;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
+
+class AttachmentSecurityTest {
+    @TempDir Path uploadDirectory;
+
+    @ParameterizedTest
+    @ValueSource(strings = {"../secret.txt", "folder/file.txt", "folder\\file.txt", "file\r\nheader.txt", ".."})
+    void rejectsPathsAndControlCharactersInFilename(String filename) {
+        FileStorageService storage = new FileStorageService(uploadDirectory.toString());
+        var file = new MockMultipartFile("files", filename, "text/plain", new byte[]{1});
+
+        assertThatThrownBy(() -> storage.store(1L, file))
+                .isInstanceOfSatisfying(BusinessException.class,
+                        error -> assertThat(error.getErrorCode()).isEqualTo(ErrorCode.INVALID_FILE));
+    }
+
+    @Test
+    void ordinaryFilenameWithApostropheCanBeStored() throws Exception {
+        FileStorageService storage = new FileStorageService(uploadDirectory.toString());
+        var file = new MockMultipartFile("files", "admin'--.txt", "text/plain", new byte[]{1, 2, 3});
+
+        String key = storage.store(1L, file);
+
+        assertThat(storage.load(key).getContentAsByteArray()).containsExactly(1, 2, 3);
+        assertThat(key).startsWith("attachments/posts/1/").doesNotContain("admin");
+    }
+
+    @Test
+    void downloadDoesNotUseUploaderContentType() {
+        PostAttachmentService service = mock(PostAttachmentService.class);
+        PostAttachmentController controller = new PostAttachmentController(service);
+        var attachment = PostAttachment.builder().originalFileName("page.html")
+                .contentType("text/html").fileSize(1).build();
+        when(service.download(1L, 2L)).thenReturn(new PostAttachmentService.DownloadedAttachment(
+                attachment, new ByteArrayResource(new byte[]{1})));
+
+        var response = controller.download(1L, 2L);
+
+        assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_OCTET_STREAM);
+        assertThat(response.getHeaders().getContentDisposition().getType()).isEqualTo("attachment");
+        assertThat(response.getHeaders().getContentDisposition().getFilename()).isEqualTo("page.html");
+    }
+
+    @Test
+    void tooManyFilesAreRejectedBeforeWritingAnything() {
+        var attachments = mock(PostAttachmentRepository.class);
+        var posts = mock(PostRepository.class);
+        var storage = mock(FileStorageService.class);
+        var service = new PostAttachmentService(attachments, posts, storage);
+        var file = new MockMultipartFile("files", "file.txt", "text/plain", new byte[]{1});
+
+        assertThatThrownBy(() -> service.upload(1L, Collections.nCopies(11, file), "writer@test.com"))
+                .isInstanceOfSatisfying(BusinessException.class,
+                        error -> assertThat(error.getErrorCode()).isEqualTo(ErrorCode.INVALID_FILE));
+        verifyNoInteractions(attachments, posts, storage);
+    }
+}

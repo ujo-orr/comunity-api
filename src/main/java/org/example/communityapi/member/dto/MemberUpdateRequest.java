@@ -1,6 +1,5 @@
 package org.example.communityapi.member.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 public record MemberUpdateRequest (

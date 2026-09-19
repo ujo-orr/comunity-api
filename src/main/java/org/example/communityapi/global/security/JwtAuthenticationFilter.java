@@ -90,13 +90,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         String email = claims.getSubject();
         String role = claims.get("role", String.class);
-        if (!StringUtils.hasText(email) || !StringUtils.hasText(role) || isBlacklisted(token)) {
+        Long memberId = claims.get("memberId", Long.class);
+        Integer tokenVersion = claims.get("tokenVersion", Integer.class);
+        if (!StringUtils.hasText(email) || !StringUtils.hasText(role) || memberId == null
+                || tokenVersion == null || isBlacklisted(token)) {
             SecurityContextHolder.clearContext();
             return;
         }
 
+        // 같은 이메일로 다시 가입해도 예전 토큰은 쓸 수 없다.
         Member member = memberRepository.findByEmail(email).orElse(null);
         if (member == null || member.getStatus() != MemberStatus.ACTIVE
+                || !memberId.equals(member.getId())
+                || tokenVersion != member.getTokenVersion()
                 || !member.getRole().name().equals(role)) {
             SecurityContextHolder.clearContext();
             return;

@@ -21,7 +21,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-    // Spring MVC가 결정한 상태 코드와 Allow 등의 헤더를 유지하면서 응답 형식을 통일한다.
+    // 상태 코드와 헤더는 유지하고 오류 내용만 공통 형식으로 변경
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(
             Exception e, Object body, HttpHeaders headers, HttpStatusCode status, WebRequest request
@@ -44,7 +44,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ErrorResponse response = e instanceof BindException bindingException
                 ? ErrorResponse.of(errorCode, bindingException.getBindingResult())
                 : ErrorResponse.of(errorCode);
-        // 오류 응답은 Accept 값과 무관하게 API 공통 JSON 형식으로 제공한다.
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.putAll(headers);
         responseHeaders.setContentType(MediaType.APPLICATION_JSON);
@@ -64,7 +63,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return response(ErrorCode.INVALID_INPUT_VALUE);
     }
 
-    // 메서드 보안에서 발생한 예외도 필터의 인증/인가 실패와 같은 형식으로 반환한다.
     @ExceptionHandler(AccessDeniedException.class)
     protected ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException e) {
         return response(ErrorCode.ACCESS_DENIED);
@@ -75,7 +73,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return response(ErrorCode.UNAUTHORIZED);
     }
 
-    // 트랜잭션 커밋 시점의 실패도 서비스 밖에서 여기로 전달된다.
+    // 서비스가 끝난 뒤 DB에 반영하다 생긴 오류도 여기서 처리
     @ExceptionHandler({DataAccessException.class, TransactionException.class})
     protected ResponseEntity<ErrorResponse> handleStorageException(RuntimeException e) {
         ErrorCode errorCode = StorageExceptionClassifier.classify(e);

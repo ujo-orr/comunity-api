@@ -49,7 +49,6 @@ public class Post extends BaseTimeEntity {
         this.viewCount = 0;
     }
 
-    // 게시글 수정 비즈니스 메서드
     public void updatePost(
             String title,
             String content,
@@ -60,7 +59,6 @@ public class Post extends BaseTimeEntity {
         this.category = category;
     }
 
-    // 조회수 증가 비즈니스 메서드
     public void increaseViewCount() {
         this.viewCount++;
     }
@@ -68,7 +66,7 @@ public class Post extends BaseTimeEntity {
 
     public void validateWriter(String email) {
         if (!member.getEmail().equals(email)) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
         }
     }
 }

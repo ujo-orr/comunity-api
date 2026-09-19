@@ -22,41 +22,37 @@ public class AdminMemberService {
     private final MemberWithdrawalRepository memberWithdrawalRepository;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    // 전체 회원 목록 조회 (관리자용 DTO 반환)
     public List<AdminMemberResponse> findAllMembers() {
         return memberRepository.findAllAdminMemberResponses();
     }
 
-    // 회원 조회
     public List<AdminMemberResponse> searchMembers(String keyword) {
         if (!StringUtils.hasText(keyword)) {
             return memberRepository.findAllAdminMemberResponses();
         }
 
-        // 이메일, 닉네임, 전화번호 중 하나라도 포함(Containing)되어 있으면 조회
         return memberRepository.searchAdminMemberResponsesByKeyword(keyword);
     }
 
-    // 회원탈퇴 복구 (탈퇴 철회)
     @Transactional
     public void cancelWithdrawal(Long id) {
-        // 탈퇴 유예 테이블에서 해당 ID의 탈퇴 신청 기록 조회
         MemberWithdrawal withdrawal = memberWithdrawalRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        // 닉네임 중복 검사 (유예 기간 중 타인이 해당 닉네임으로 신규 가입했을 위험 방지)
+        if (memberRepository.existsByEmail(withdrawal.getEmail())) {
+            throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
+        }
+
         if (memberRepository.existsByNickname(withdrawal.getNickname())) {
             throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
         }
 
-        // 전화번호 중복 검사
         if (memberRepository.existsByPhoneNumber(withdrawal.getPhoneNumber())) {
             throw new BusinessException(ErrorCode.DUPLICATE_PHONE_NUMBER);
         }
 
         memberRepository.save(withdrawal.toMember());
 
-        // 6. 탈퇴 유예 테이블에서 백업 데이터 삭제 (철회 완료)
         memberWithdrawalRepository.delete(withdrawal);
     }
 
@@ -65,8 +61,7 @@ public class AdminMemberService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        // 자기 자신이나 다른 관리자를 차단하는 예외 케이스 처리
-        if (member.getRole() == Role.ADMIN) {
+        if (member.getRole() != Role.USER) {
             throw new BusinessException(ErrorCode.BAN_DENIED);
         }
 

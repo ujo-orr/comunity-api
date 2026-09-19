@@ -21,14 +21,12 @@ public class AuthController {
 
     private final AuthService authService;
 
-    // Access Token 재발급 요청
     @PostMapping("/reissue")
     public ResponseEntity<TokenResponse> reissue(@Valid @RequestBody RefreshTokenRequest request) {
         TokenResponse tokenResponse = authService.reissue(request.refreshToken());
         return ResponseEntity.ok(tokenResponse);
     }
 
-    // 로그인 API (토큰)
     @PostMapping("/login")
     public ResponseEntity<AuthLoginResponse> login(
             @Valid
@@ -38,10 +36,8 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    // 로그아웃 요청 (인증된 회원만 접근 가능)
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request) {
-        // Authorization 헤더에서 Bearer 토큰 추출
         String bearerToken = request.getHeader("Authorization");
         String accessToken = null;
 

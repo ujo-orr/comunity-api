@@ -27,7 +27,7 @@ public class PostAttachmentService {
 
     @Transactional
     public List<AttachmentResponse> upload(Long postId, List<MultipartFile> files, String email) {
-        if (files == null || files.isEmpty()) {
+        if (files == null || files.isEmpty() || files.size() > 10) {
             throw new BusinessException(ErrorCode.INVALID_FILE);
         }
         Post post = postRepository.findByIdWithMember(postId)
@@ -35,6 +35,15 @@ public class PostAttachmentService {
         post.validateWriter(email);
 
         List<String> storageKeys = new ArrayList<>();
+        // DB 저장이 취소되면 디스크에 먼저 저장한 파일도 지운다.
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                if (status == STATUS_ROLLED_BACK) {
+                    storageKeys.forEach(fileStorageService::deleteQuietly);
+                }
+            }
+        });
         try {
             List<PostAttachment> attachments = files.stream().map(file -> {
                 String storageKey = fileStorageService.store(postId, file);

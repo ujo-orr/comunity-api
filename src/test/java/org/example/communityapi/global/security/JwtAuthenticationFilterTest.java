@@ -38,11 +38,11 @@ class JwtAuthenticationFilterTest {
     void setUp() {
         var provider = new JwtTokenProvider("test-secret-key-must-be-at-least-32-bytes-long", 60000, 120000);
         filter = new JwtAuthenticationFilter(provider, redis, members, new ObjectMapper());
-        token = provider.createAccessToken("filter@test.com", Role.USER);
+        token = provider.createAccessToken("filter@test.com", Role.USER, 1L, 0);
         request.addHeader("Authorization", "Bearer " + token);
         when(redis.opsForValue()).thenReturn(values);
         when(members.findByEmail("filter@test.com")).thenReturn(Optional.of(
-                Member.builder().email("filter@test.com").build()));
+                Member.builder().id(1L).email("filter@test.com").build()));
         SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("old", ""));
     }
 

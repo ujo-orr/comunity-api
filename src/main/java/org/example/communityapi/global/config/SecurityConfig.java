@@ -6,6 +6,7 @@ import org.example.communityapi.global.security.CustomAuthenticationEntryPoint;
 import org.example.communityapi.global.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -27,6 +28,7 @@ public class SecurityConfig {
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final Environment environment;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -35,30 +37,35 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        boolean local = environment.matchesProfiles("local");
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .headers(headers -> headers
-                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
-                )
+                .headers(headers -> {
+                    if (local) {
+                        headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin);
+                    }
+                })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers(
+                .authorizeHttpRequests(auth -> {
+                    if (local) {
+                        auth.requestMatchers("/h2-console/**").permitAll();
+                    } else {
+                        auth.requestMatchers("/h2-console/**").denyAll();
+                    }
+                    auth.requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
-                        .requestMatchers("/api/members/signup", "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/members/signup", "/api/members/restore",
+                                "/api/auth/login", "/api/auth/reissue").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/members/search/**").permitAll()
-                        .requestMatchers("/api/auth/reissue").permitAll()
-
-                        // Role-based endpoints
+                        .requestMatchers(HttpMethod.GET, "/api/posts", "/api/posts/{id}").permitAll()
                         .requestMatchers("/api/v1/superadmin/**").hasRole("SUPERADMIN")
                         .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPERADMIN")
 
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated();
+                })
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler)

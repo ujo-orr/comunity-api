@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
-    // SQL의 원자적 증가 연산으로 동시 조회 시 증가분 유실을 방지한다.
+    // 여러 명이 동시에 조회해도 조회수가 빠지지 않게 DB에서 바로 올린다.
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
         UPDATE Post p
@@ -31,34 +31,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     boolean existsByCategoryId(Long categoryId);
 
-    // 게시글 작성자 검증이 필요한 수정/삭제 흐름에서 사용
-    // LAZY 연관관계를 유지하면서도 작성자 조회로 인한 추가 쿼리를 방지
+    // 작성자를 확인할 때 쿼리가 한 번 더 나가지 않도록 함께 조회한다.
     @Query("SELECT p FROM Post p JOIN FETCH p.member WHERE p.id = :id")
     java.util.Optional<Post> findByIdWithMember(@Param("id") Long id);
 
-    // 닉네임으로 게시글 다건 조회
-    @Query("""
-        SELECT new org.example.communityapi.post.dto.PostResponse(
-            p.id,
-            p.title,
-            p.content,
-            c.name,
-            m.nickname,
-            p.viewCount,
-            p.createdAt,
-            p.updatedAt
-        )
-        FROM Post p
-        JOIN p.member m
-        JOIN p.category c
-        WHERE m.nickname = :nickname
-        ORDER BY p.createdAt DESC, p.id DESC
-        """)
-    Page<PostResponse> findByMemberNickname(
-            @Param("nickname") String nickname, Pageable pageable
-    );
-
-    // 제목 키워드로 게시글 다건 조회
     @Query("""
     SELECT new org.example.communityapi.post.dto.PostResponse(
         p.id,
@@ -73,14 +49,15 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     FROM Post p
     JOIN p.member m
     JOIN p.category c
-    WHERE p.title LIKE CONCAT('%', :title, '%')
+    WHERE p.title LIKE CONCAT('%', :keyword, '%') ESCAPE '!'
+       OR p.content LIKE CONCAT('%', :keyword, '%') ESCAPE '!'
+       OR m.nickname LIKE CONCAT('%', :keyword, '%') ESCAPE '!'
     ORDER BY p.createdAt DESC, p.id DESC
     """)
-    Page<PostResponse> findByTitle(
-            @Param("title") String title, Pageable pageable
+    Page<PostResponse> searchPosts(
+            @Param("keyword") String keyword, Pageable pageable
     );
 
-    // 전체 게시글 조회
     @Query("""
     SELECT new org.example.communityapi.post.dto.PostResponse(
         p.id,

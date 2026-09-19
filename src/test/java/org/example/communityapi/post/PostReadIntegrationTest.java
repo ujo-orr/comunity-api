@@ -71,7 +71,6 @@ class PostReadIntegrationTest {
         categories.deleteById(category.getId());
     }
 
-    // 게시글 단건 조회 증가
     @Test
     void detailIncrementsAndReturnsCurrentCount() throws Exception {
         Long id = postIds.getFirst();
@@ -86,11 +85,10 @@ class PostReadIntegrationTest {
         assertThat(posts.findById(id).orElseThrow().getUpdatedAt()).isEqualTo(updatedAt);
     }
 
-    // 목록 조회 API들의 페이징 동작, 미회수 증가 규칙
     @Test
     void listsArePagedAndDoNotIncrementViews() throws Exception {
-        for (String path : List.of("/api/posts", "/api/posts/search", "/api/posts/by-nickname/12345")) {
-            mvc.perform(get(path).param("title", "paging").param("size", "2"))
+        for (String path : List.of("/api/posts")) {
+            mvc.perform(get(path).param("keyword", "paging").param("size", "2"))
                     .andExpect(status().isOk()).andExpect(jsonPath("totalElements").value(3))
                     .andExpect(jsonPath("content[0].id").value(postIds.getLast()))
                     .andExpect(jsonPath("last").value(false));
@@ -104,74 +102,98 @@ class PostReadIntegrationTest {
         assertThat(posts.findAllById(postIds)).allMatch(p -> p.getViewCount() == 0);
     }
 
-    // 검색 필터 동장, 빈 페이지, 잘못된 검색어
     @Test
     void filtersAndEmptyPages() throws Exception {
 
-        // 특정 제목에 해당하는 게시글 검색
-        mvc.perform(get("/api/posts/search").param("title", "paging 1"))
+        mvc.perform(get("/api/posts").param("keyword", "paging 1"))
                 .andExpect(status().isOk()).andExpect(jsonPath("totalElements").value(1))
                 .andExpect(jsonPath("content[0].id").value(postIds.get(1)))
                 .andExpect(jsonPath("page").value(0)).andExpect(jsonPath("size").value(20));
 
-        // 검색어와 일치하는 게시글이 없는 경우
-        mvc.perform(get("/api/posts").param("title", "none"))
+        mvc.perform(get("/api/posts").param("keyword", "none"))
                 .andExpect(status().isOk()).andExpect(jsonPath("content").isEmpty())
                 .andExpect(jsonPath("totalElements").value(0));
 
-        // 데이터가 있는 범위를 넘어선 페이지 요청
         mvc.perform(get("/api/posts").param("page", "100"))
                 .andExpect(status().isOk()).andExpect(jsonPath("content").isEmpty())
                 .andExpect(jsonPath("totalElements").value(3));
 
-        // 공백 검색어는 제목 필터 없이 조회
-        mvc.perform(get("/api/posts").param("title", " "))
-                .andExpect(status().isOk()).andExpect(jsonPath("totalElements").value(3));
+        for (String keyword : List.of("", " ", "\t\n")) {
+            mvc.perform(get("/api/posts").param("keyword", keyword))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("message").value("검색어를 입력해 주세요."));
+        }
     }
 
-    // 댓글 페이징, 오름차순
+    @Test
+    void searchesContentAndPartialNicknameWithoutDuplicatePosts() throws Exception {
+        for (String keyword : List.of("body", "234", "  paging  ")) {
+            mvc.perform(get("/api/posts").param("keyword", keyword).param("size", "2"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("totalElements").value(3))
+                    .andExpect(jsonPath("content.length()").value(2))
+                    .andExpect(jsonPath("content[0].id").value(postIds.getLast()));
+        }
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            posts.findById(postIds.getFirst()).orElseThrow()
+                    .updatePost("234", "234", category);
+        });
+        mvc.perform(get("/api/posts").param("keyword", "234"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("totalElements").value(3))
+                .andExpect(jsonPath("content.length()").value(3));
+        assertThat(posts.findAllById(postIds)).allMatch(p -> p.getViewCount() == 0);
+    }
+
+    @Test
+    void wildcardCharactersAreSearchedLiterally() throws Exception {
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            posts.findById(postIds.getFirst()).orElseThrow()
+                    .updatePost("100%_done!", "body", category);
+        });
+        for (String keyword : List.of("%", "_", "!", "%_done!")) {
+            mvc.perform(get("/api/posts").param("keyword", keyword))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("totalElements").value(1))
+                    .andExpect(jsonPath("content[0].id").value(postIds.getFirst()));
+        }
+    }
+
     @Test
     void commentsArePagedOldestFirstAndScopedToPost() throws Exception {
 
-        // 첫 번째 게시글의 댓글 첫 페이지
         mvc.perform(get("/api/posts/{id}/comments", postIds.getFirst()).param("size", "2"))
                 .andExpect(status().isOk()).andExpect(jsonPath("content.length()").value(2))
                 .andExpect(jsonPath("content[0].id").value(commentIds.getFirst()))
                 .andExpect(jsonPath("content[1].id").value(commentIds.get(1)))
                 .andExpect(jsonPath("totalElements").value(3)).andExpect(jsonPath("last").value(false));
 
-        // 같은 게시글의 댓글 두 번째 페이지
         mvc.perform(get("/api/posts/{id}/comments", postIds.getFirst()).param("size", "2").param("page", "1"))
                 .andExpect(status().isOk()).andExpect(jsonPath("content[0].id").value(commentIds.getLast()))
                 .andExpect(jsonPath("last").value(true));
 
-        // 댓글을 저장하지 않은 다른 게시글
         mvc.perform(get("/api/posts/{id}/comments", postIds.getLast()))
                 .andExpect(status().isOk()).andExpect(jsonPath("totalElements").value(0));
     }
 
-    // 지원하지 않는 자원
     @Test
     void missingResourcesReturn404() throws Exception {
         for (String path : List.of(
                 "/api/posts/9223372036854775807",
-                "/api/posts/9223372036854775807/comments",
-                "/api/posts/by-nickname/missing")) {
+                "/api/posts/9223372036854775807/comments")) {
             mvc.perform(get(path)).andExpect(status().isNotFound());
         }
     }
 
-    // 유효하지 않은 페이징 파라미터
     @Test
     void invalidPageParametersReturn400() throws Exception {
         for (String path : List.of(
                 "/api/posts",
-                "/api/posts/search",
-                "/api/posts/by-nickname/12345",
                 "/api/posts/" + postIds.getFirst() + "/comments"
         )) {
             for (String[] param : List.of(
                     new String[]{"page", "-1"},
+                    new String[]{"page", "2147483647"},
                     new String[]{"size", "0"},
                     new String[]{"size", "101"},
                     new String[]{"page", "abc"}
@@ -184,7 +206,6 @@ class PostReadIntegrationTest {
         }
     }
 
-    // 동시성 조회수 누락
     @Test
     void concurrentReadsDoNotLoseIncrements() throws Exception {
         try (var executor = Executors.newFixedThreadPool(6)) {
@@ -207,12 +228,11 @@ class PostReadIntegrationTest {
                 .isEqualTo(30);
     }
 
-    // 게시글 수정 시 이전 조회수 덮어쓰기 검증
     @Test
     void editingPreviouslyLoadedPostDoesNotOverwriteViewCount() {
         new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
             var loaded = posts.findById(postIds.getFirst()).orElseThrow();
-            // 별도 DB 갱신 이후 영속성 컨텍스트의 조회 수는 이전 값으로 남아 있다.
+            // 다른 요청이 조회수를 올려도 수정할 때 덮어쓰면 안 된다.
             jdbc.update("update posts set view_count = view_count + 1 where id = ?", loaded.getId());
             loaded.updatePost("edited", "edited body", category);
         });

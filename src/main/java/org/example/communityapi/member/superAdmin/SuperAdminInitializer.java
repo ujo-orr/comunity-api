@@ -23,10 +23,9 @@ public class SuperAdminInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (bootstrapPassword.length() < 10) {
+        if (bootstrapPassword.length() < 12) {
             throw new IllegalStateException("BOOTSTRAP_SUPERADMIN_PASSWORD must be at least 12 characters long");
         }
-        // SUPERADMIN 권한을 가진 계정이 없으면 자동 생성
         if (!memberRepository.existsByRole(Role.SUPERADMIN)) {
             Member superAdmin = Member.builder()
                     .email("superAdmin@system.com")

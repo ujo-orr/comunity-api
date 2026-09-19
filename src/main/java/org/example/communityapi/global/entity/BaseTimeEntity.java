@@ -19,5 +19,5 @@ public abstract class BaseTimeEntity {
     private LocalDateTime createdAt;
 
     @LastModifiedDate
-    private LocalDateTime updatedAt; // 수정 발생 시 자동 갱신
+    private LocalDateTime updatedAt;
 }

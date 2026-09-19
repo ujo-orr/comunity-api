@@ -11,7 +11,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-
 @Component
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "bootstrap.admin.enabled", havingValue = "true")
@@ -24,10 +23,9 @@ public class AdminInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (bootstrapPassword.length() < 10) {
+        if (bootstrapPassword.length() < 12) {
             throw new IllegalStateException("BOOTSTRAP_ADMIN_PASSWORD must be at least 12 characters long");
         }
-        // ADMIN 권한을 가진 계정이 없으면 자동 생성
         if (!memberRepository.existsByRole(Role.ADMIN)) {
             Member superAdmin = Member.builder()
                     .email("admin@system.com")

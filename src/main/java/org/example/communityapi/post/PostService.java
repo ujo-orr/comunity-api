@@ -32,7 +32,6 @@ public class PostService {
     private final PostAttachmentRepository attachmentRepository;
     private final FileStorageService fileStorageService;
 
-    // 게시글 작성
     @Transactional
     public Long createPost(PostCreateRequest request, String userEmail) {
 
@@ -63,27 +62,22 @@ public class PostService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
     }
 
-    // 특정 회원의 게시글 조회
-    public Page<PostResponse> getPostsByNickname(String nickname, Pageable pageable) {
-
-        if (!memberRepository.existsByNickname(nickname)) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+    public Page<PostResponse> getPosts(String keyword, Pageable pageable) {
+        if (keyword == null) {
+            return postRepository.findAllPosts(pageable);
+        }
+        if (!StringUtils.hasText(keyword)) {
+            throw new BusinessException(ErrorCode.EMPTY_SEARCH_KEYWORD);
         }
 
-        return postRepository.findByMemberNickname(nickname, pageable);
+        // LIKE의 특수문자도 사용자가 입력한 문자 그대로 검색한다.
+        String escapedKeyword = keyword.strip()
+                .replace("!", "!!")
+                .replace("%", "!%")
+                .replace("_", "!_");
+        return postRepository.searchPosts(escapedKeyword, pageable);
     }
 
-    // 게시글 검색
-    public Page<PostResponse> getPosts(String title, Pageable pageable) {
-
-        if (StringUtils.hasText(title)) {
-            return postRepository.findByTitle(title, pageable);
-        }
-
-        return postRepository.findAllPosts(pageable);
-    }
-
-    // 게시글 수정
     @Transactional
     public void updatePost(
             Long id,
@@ -106,7 +100,6 @@ public class PostService {
         );
     }
 
-    // 게시글 삭제
     @Transactional
     public void deletePost(Long id, String email) {
 
@@ -116,8 +109,7 @@ public class PostService {
 
         post.validateWriter(email);
 
-        // FK cascade는 첨부파일 메타데이터를 지우고, 실제 파일은 커밋 뒤에 제거한다.
-        // 롤백된 게시글 삭제 때문에 파일만 먼저 사라지는 일을 막는다.
+        // DB 삭제가 끝난 뒤 파일을 지워야 롤백돼도 첨부파일이 남는다.
         var storageKeys = attachmentRepository.findByPostId(id).stream()
                 .map(attachment -> attachment.getStorageKey())
                 .toList();

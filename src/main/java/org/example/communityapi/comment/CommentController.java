@@ -1,12 +1,14 @@
 package org.example.communityapi.comment;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.example.communityapi.comment.dto.CommentCreateRequest;
 import org.example.communityapi.comment.dto.CommentResponse;
 import org.example.communityapi.comment.dto.CommentUpdateRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -21,6 +23,7 @@ import org.example.communityapi.global.dto.PageRequestParams;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
+@Validated
 @RequestMapping("/api")
 @RequiredArgsConstructor
 public class CommentController {
@@ -29,7 +32,7 @@ public class CommentController {
 
     @PostMapping("/posts/{postId}/comments")
     public ResponseEntity<Long> createComment(
-            @PathVariable Long postId,
+            @Positive @PathVariable Long postId,
             @Valid @RequestBody CommentCreateRequest request,
             Authentication authentication) {
         return ResponseEntity.ok(commentService.createComment(postId, request, authentication.getName()));
@@ -37,7 +40,7 @@ public class CommentController {
 
     @GetMapping("/posts/{postId}/comments")
     public ResponseEntity<PageResponse<CommentResponse>> getComments(
-            @PathVariable Long postId,
+            @Positive @PathVariable Long postId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(PageResponse.from(
@@ -46,7 +49,7 @@ public class CommentController {
 
     @PatchMapping("/comments/{commentId}")
     public ResponseEntity<Void> updateComment(
-            @PathVariable Long commentId,
+            @Positive @PathVariable Long commentId,
             @Valid @RequestBody CommentUpdateRequest request,
             Authentication authentication) {
         commentService.updateComment(commentId, request, authentication.getName());
@@ -55,7 +58,7 @@ public class CommentController {
 
     @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(
-            @PathVariable Long commentId,
+            @Positive @PathVariable Long commentId,
             Authentication authentication) {
         commentService.deleteComment(commentId, authentication.getName());
         return ResponseEntity.ok().build();

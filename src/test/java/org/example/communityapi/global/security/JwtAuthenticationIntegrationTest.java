@@ -9,9 +9,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.UUID;
@@ -29,8 +29,8 @@ class JwtAuthenticationIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired JwtTokenProvider jwtTokenProvider;
     @Autowired MemberRepository memberRepository;
-    @MockBean StringRedisTemplate redisTemplate;
-    @MockBean ValueOperations<String, String> valueOperations;
+    @MockitoBean StringRedisTemplate redisTemplate;
+    @MockitoBean ValueOperations<String, String> valueOperations;
 
     Member member;
     String token;
@@ -44,7 +44,7 @@ class JwtAuthenticationIntegrationTest {
                 .phoneNumber("010" + suffix)
                 .password("encoded")
                 .build());
-        token = jwtTokenProvider.createAccessToken(member.getEmail(), member.getRole());
+        token = jwtTokenProvider.createAccessToken(member.getEmail(), member.getRole(), member.getId(), member.getTokenVersion());
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
     }
 

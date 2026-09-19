@@ -17,7 +17,7 @@ public class RefreshToken {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 512)
     private String token;
 
     public RefreshToken(String email, String token) {
@@ -25,7 +25,6 @@ public class RefreshToken {
         this.token = token;
     }
 
-    // Refresh Token 값 갱신 메서드
     public void updateToken(String newToken) {
         this.token = newToken;
     }

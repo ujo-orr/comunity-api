@@ -5,12 +5,14 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import javax.crypto.SecretKey;
+import org.example.communityapi.member.Role;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 public class JwtTokenProvider {
@@ -29,29 +31,32 @@ public class JwtTokenProvider {
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
     }
 
-    private String createToken(String email, String role, long expirationMs) {
+    private String createToken(String email, String role, Long memberId, int tokenVersion, long expirationMs) {
         Instant now = Instant.now();
         Instant validity = now.plusMillis(expirationMs);
 
+        // 같은 순간에 발급해도 서로 다른 토큰이 되게 한다.
         var builder = Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(email)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(validity));
 
         if (role != null) {
             builder.claim("role", role);
+            builder.claim("memberId", memberId);
+            builder.claim("tokenVersion", tokenVersion);
         }
 
         return builder.signWith(key).compact();
     }
 
-    public String createAccessToken(String email, Object role) {
-        String roleString = (role instanceof Enum) ? ((Enum<?>) role).name() : String.valueOf(role);
-        return createToken(email, roleString, accessTokenExpirationMs);
+    public String createAccessToken(String email, Role role, Long memberId, int tokenVersion) {
+        return createToken(email, role.name(), memberId, tokenVersion, accessTokenExpirationMs);
     }
 
     public String createRefreshToken(String email) {
-        return createToken(email, null, refreshTokenExpirationMs);
+        return createToken(email, null, null, 0, refreshTokenExpirationMs);
     }
 
     public String getEmailFromToken(String token) {

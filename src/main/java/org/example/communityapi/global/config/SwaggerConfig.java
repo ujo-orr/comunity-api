@@ -8,7 +8,6 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-// http://localhost:8080/swagger-ui.html
 @Configuration
 public class SwaggerConfig {
 
@@ -16,10 +15,8 @@ public class SwaggerConfig {
     public OpenAPI openAPI() {
         String securityJwtName = "JWT Token";
 
-        // SecurityRequirement 설정 (요청 헤더에 토큰 포함)
         SecurityRequirement securityRequirement = new SecurityRequirement().addList(securityJwtName);
 
-        // SecurityScheme 설정 (Authorize 버튼 생성 및 Bearer 방식 지정)
         Components components = new Components()
                 .addSecuritySchemes(securityJwtName, new SecurityScheme()
                         .name(securityJwtName)

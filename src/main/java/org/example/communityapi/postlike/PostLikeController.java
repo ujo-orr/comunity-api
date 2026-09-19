@@ -1,11 +1,14 @@
 package org.example.communityapi.postlike;
 
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@Validated
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
 public class PostLikeController {
@@ -14,7 +17,7 @@ public class PostLikeController {
 
     @PostMapping("/{postId}/likes")
     public ResponseEntity<Void> likePost(
-            @PathVariable Long postId,
+            @Positive @PathVariable Long postId,
             Authentication authentication) {
         postLikeService.likePost(postId, authentication.getName());
         return ResponseEntity.ok().build();
@@ -22,14 +25,14 @@ public class PostLikeController {
 
     @DeleteMapping("/{postId}/likes")
     public ResponseEntity<Void> unlikePost(
-            @PathVariable Long postId,
+            @Positive @PathVariable Long postId,
             Authentication authentication) {
         postLikeService.unlikePost(postId, authentication.getName());
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{postId}/likes/count")
-    public ResponseEntity<Long> getLikeCount(@PathVariable Long postId) {
+    public ResponseEntity<Long> getLikeCount(@Positive @PathVariable Long postId) {
         return ResponseEntity.ok(postLikeService.getLikeCount(postId));
     }
 }

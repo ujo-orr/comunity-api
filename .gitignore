@@ -25,7 +25,16 @@ bin/
 out/
 .DS_Store
 *.env
+.env.*
+!.env.example
 application-secret.yml
+application-secret.yaml
+uploads/
+*.log
+*.pem
+*.key
+*.p12
+*.jks
 app
 !**/src/main/**/out/
 !**/src/test/**/out/
