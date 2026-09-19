@@ -37,6 +37,7 @@ uploads/
 *.jks
 app
 *.docs
+.env.example
 !**/src/main/**/out/
 !**/src/test/**/out/
 
