@@ -1,5 +1,6 @@
 package org.example.communityapi.attachment;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.core.exception.SdkClientException;
@@ -39,6 +40,7 @@ class OrphanAttachmentCleanupServiceTest {
     }
 
     @Test
+    @DisplayName("데이터베이스에 등록된 첨부파일은 정리 대상에서 제외한다")
     void doesNotDeleteStorageKeyThatExistsInDatabase() {
         String key = "attachments/posts/1/kept";
         when(s3.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(page(object(key, NOW.minusSeconds(3601))));
@@ -51,6 +53,7 @@ class OrphanAttachmentCleanupServiceTest {
     }
 
     @Test
+    @DisplayName("데이터베이스에 없는 첨부파일은 저장 후 한 시간이 지나면 삭제한다")
     void deletesOldObjectMissingFromDatabase() {
         String key = "attachments/posts/1/orphan";
         when(s3.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(page(object(key, NOW.minusSeconds(3600))));
@@ -62,6 +65,7 @@ class OrphanAttachmentCleanupServiceTest {
     }
 
     @Test
+    @DisplayName("저장한 지 한 시간이 지나지 않은 첨부파일은 삭제하지 않는다")
     void doesNotDeleteObjectWithinOneHourProtectionWindow() {
         String key = "attachments/posts/1/recent";
         when(s3.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(page(object(key, NOW.minusSeconds(3599))));
@@ -74,6 +78,7 @@ class OrphanAttachmentCleanupServiceTest {
     }
 
     @Test
+    @DisplayName("첨부파일 하나의 삭제에 실패해도 나머지는 계속 삭제하고 성공과 실패 건수를 집계한다")
     void continuesWhenOneDeletionFails() {
         String failedKey = "attachments/posts/1/fails";
         String nextKey = "attachments/posts/1/deletes";
@@ -90,6 +95,7 @@ class OrphanAttachmentCleanupServiceTest {
     }
 
     @Test
+    @DisplayName("첨부파일 목록이 여러 페이지여도 모든 페이지의 미사용 파일을 삭제한다")
     void readsEveryS3Page() {
         String firstKey = "attachments/posts/1/first";
         String secondKey = "attachments/posts/2/second";

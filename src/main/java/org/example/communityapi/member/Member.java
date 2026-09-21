@@ -73,7 +73,7 @@ public class Member extends BaseTimeEntity {
     }
 
     public void ban() {
-        // 정지를 해제해도 정지 전에 발급한 토큰은 다시 쓸 수 없다.
+        // 정지 해제 후 기존 토큰 재사용 방지를 위한 토큰 버전 증가
         if (this.status != MemberStatus.BANNED) {
             this.tokenVersion++;
         }

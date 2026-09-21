@@ -11,6 +11,7 @@ import org.example.communityapi.member.dto.MemberSignUpRequest;
 import org.example.communityapi.post.PostRepository;
 import org.example.communityapi.post.dto.PostCreateRequest;
 import org.example.communityapi.post.dto.PostResponse;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -82,8 +83,9 @@ class CommunityFlowDockerTest {
     @Autowired JdbcTemplate jdbc;
 
     @Test
+    @DisplayName("MySQL과 Redis 환경에서 가입과 로그인 후 게시글과 첨부파일을 이용할 수 있고 로그아웃하면 보호 API는 401을 반환한다")
     void signupLoginReadAndLogoutWorkWithRealMySqlAndRedis() {
-        // 카테고리는 관리자만 만들 수 있어서 테스트 전에 미리 저장
+        // 관리자 전용 생성 정책에 따른 테스트 카테고리 사전 저장
         Long categoryId = categories.save(Category.builder().name("docker-test").build()).getId();
         MemberSignUpRequest signup = new MemberSignUpRequest(
                 "docker-flow@test.com", "Password1!", "01012345678", "테스터1");
@@ -158,7 +160,7 @@ class CommunityFlowDockerTest {
         assertThat(redisTemplate.opsForValue().get(login.accessToken())).isEqualTo("logout");
         assertThat(redisTemplate.getExpire(login.accessToken(), TimeUnit.SECONDS)).isPositive();
 
-        // 게시글 조회는 공개 API이므로 로그아웃한 토큰으로도 익명 조회가 가능하다.
+        // 로그아웃 토큰을 사용한 공개 게시글 익명 조회 검증
         ResponseEntity<PostResponse> publicReadAfterLogout = http.exchange("/api/posts/" + postId,
                 HttpMethod.GET, new HttpEntity<>(authorization), PostResponse.class);
         assertThat(publicReadAfterLogout.getStatusCode()).isEqualTo(OK);
@@ -166,7 +168,7 @@ class CommunityFlowDockerTest {
         assertThat(publicReadAfterLogout.getBody().viewCount()).isEqualTo(2);
         assertThat(posts.findById(postId).orElseThrow().getViewCount()).isEqualTo(2);
 
-        // 같은 Access Token이 인증 필수 API에서는 더 이상 유효하지 않아야 한다.
+        // 인증 필수 API의 로그아웃 Access Token 거부 검증
         ResponseEntity<String> rejected = http.exchange("/api/members/me",
                 HttpMethod.GET, new HttpEntity<>(authorization), String.class);
         assertThat(rejected.getStatusCode()).isEqualTo(UNAUTHORIZED);

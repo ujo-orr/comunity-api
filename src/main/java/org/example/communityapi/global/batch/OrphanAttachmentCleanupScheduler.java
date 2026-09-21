@@ -22,7 +22,6 @@ public class OrphanAttachmentCleanupScheduler {
     private final JobLauncher jobLauncher;
     private final Job orphanAttachmentCleanupJob;
 
-    // 기존 탈퇴 정리(04:00)와 겹치지 않게 매일 새벽 05:00에 실행한다.
     @Scheduled(cron = "0 0 5 * * *")
     public void runOrphanAttachmentCleanupJob() {
         try {

@@ -8,7 +8,7 @@ group = 'org.example'
 version = '0.0.1-SNAPSHOT'
 description = 'community-api'
 
-// 파일 업로드 관련 보안 수정이 포함된 Tomcat 사용
+// 파일 업로드 보안 수정 포함 Tomcat 버전 설정
 ext['tomcat.version'] = '10.1.60'
 
 java {
@@ -43,7 +43,7 @@ dependencies {
     runtimeOnly 'com.mysql:mysql-connector-j'
     runtimeOnly 'com.h2database:h2'
 
-    // 첨부파일 S3 저장 (AWS SDK v2의 S3 모듈만 추가)
+    // 첨부파일 저장용 AWS SDK v2 S3 모듈 설정
     implementation 'software.amazon.awssdk:s3:2.54.17'
 
     // 로그아웃한 토큰 보관
@@ -66,9 +66,9 @@ dependencies {
 }
 
 tasks.withType(Test).configureEach {
-    // Mockito 에이전트는 테스트 시작 때 연결
+    // 테스트 시작 시 Mockito 에이전트 연결
     jvmArgs "-javaagent:${configurations.byteBuddyAgent.singleFile.absolutePath}"
-    // Mockito 실행 시 CDS 경고가 나지 않도록 설정
+    // Mockito 실행 시 CDS 경고 방지 설정
     jvmArgs '-Xshare:off'
     testLogging {
         events 'passed', 'skipped', 'failed'
@@ -90,7 +90,7 @@ tasks.register('dockerTest', Test) {
     useJUnitPlatform {
         includeTags 'docker'
     }
-    // 현재 Testcontainers가 Docker 29에서도 실행되도록 API 버전 지정
+    // Docker 29 호환용 Testcontainers API 버전 설정
     systemProperty 'api.version', '1.44'
     shouldRunAfter tasks.named('test')
 }

@@ -13,6 +13,7 @@ import org.example.communityapi.member.Role;
 import org.example.communityapi.member.dto.MemberSignUpRequest;
 import org.example.communityapi.member.dto.MemberUpdateRequest;
 import org.example.communityapi.member.dto.MemberWithdrawalRequest;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +59,36 @@ class SecurityRegressionIntegrationTest {
     }
 
     @Test
+    @DisplayName("회원가입과 로그인 후 토큰을 재발급할 수 있고 사용한 Refresh Token과 로그아웃한 토큰은 재사용하지 못하도록 처리한다")
+    void signupLoginReissueAndLogoutManageTokenLifecycle() throws Exception {
+        mvc.perform(post("/api/members/signup").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"publicflow@test.com","password":"Password1!",
+                                 "phoneNumber":"01012345678","nickname":"공개가입"}
+                                """))
+                .andExpect(status().isCreated());
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        var login = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"publicflow@test.com\",\"password\":\"Password1!\"}"))
+                .andExpect(status().isOk()).andReturn();
+        String refresh = mapper.readTree(login.getResponse().getContentAsString()).get("refreshToken").asText();
+        var reissue = mvc.perform(post("/api/auth/reissue").contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(java.util.Map.of("refreshToken", refresh))))
+                .andExpect(status().isOk()).andReturn();
+        String access = mapper.readTree(reissue.getResponse().getContentAsString()).get("accessToken").asText();
+        mvc.perform(post("/api/auth/reissue").contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(java.util.Map.of("refreshToken", refresh))))
+                .andExpect(status().isUnauthorized()).andExpect(jsonPath("code").value("A002"));
+        mvc.perform(post("/api/auth/logout").header("Authorization", "Bearer " + access))
+                .andExpect(status().isOk());
+        assertThat(refreshTokens.findByEmail("publicflow@test.com")).isEmpty();
+        org.mockito.Mockito.verify(valueOperations).set(org.mockito.ArgumentMatchers.eq(access),
+                org.mockito.ArgumentMatchers.eq("logout"), org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.eq(java.util.concurrent.TimeUnit.MILLISECONDS));
+    }
+
+    @Test
+    @DisplayName("토큰을 재발급하면 Refresh Token이 변경되고 이전 Refresh Token은 재사용할 수 없다")
     void refreshTokenChangesEveryTimeAndCannotBeReused() {
         Member member = saveMember("rotate", Role.USER);
         String firstToken = authService.login(new MemberLoginRequest(member.getEmail(), PASSWORD)).refreshToken();
@@ -73,6 +104,7 @@ class SecurityRegressionIntegrationTest {
     }
 
     @Test
+    @DisplayName("정지된 회원은 Refresh Token이 저장되어 있어도 토큰을 재발급할 수 없다")
     void bannedMemberCannotRefreshEvenIfTokenRemainsInDatabase() {
         Member member = saveMember("banned", Role.USER);
         String refreshToken = tokens.createRefreshToken(member.getEmail());
@@ -85,6 +117,7 @@ class SecurityRegressionIntegrationTest {
     }
 
     @Test
+    @DisplayName("회원이 탈퇴하면 Refresh Token을 삭제하고 유예 기간에는 같은 이메일로 가입할 수 없다")
     void withdrawalRemovesRefreshTokenAndReservesEmailDuringGracePeriod() {
         Member member = saveMember("withdraw", Role.USER);
         authService.login(new MemberLoginRequest(member.getEmail(), PASSWORD));
@@ -99,6 +132,7 @@ class SecurityRegressionIntegrationTest {
     }
 
     @Test
+    @DisplayName("같은 이메일로 새 계정을 생성해도 이전 계정의 Access Token으로 접근하면 401을 반환한다")
     void oldAccessTokenCannotAuthenticateANewAccountUsingTheSameEmail() throws Exception {
         Member original = saveMember("reused", Role.USER);
         String accessToken = accessToken(original);
@@ -112,6 +146,7 @@ class SecurityRegressionIntegrationTest {
     }
 
     @Test
+    @DisplayName("비밀번호를 변경하면 기존 Access Token과 Refresh Token은 폐기되고 새 비밀번호로 로그인할 수 있다")
     void passwordChangeRevokesExistingAccessAndRefreshTokens() throws Exception {
         Member member = saveMember("pwdchange", Role.USER);
         var originalTokens = authService.login(new MemberLoginRequest(member.getEmail(), PASSWORD));
@@ -127,6 +162,7 @@ class SecurityRegressionIntegrationTest {
     }
 
     @Test
+    @DisplayName("탈퇴한 회원은 Access Token 없이 비밀번호로 계정을 복구하면 200을 반환한다")
     void withdrawnMemberCanRestoreWithPasswordWithoutAnAccessToken() throws Exception {
         Member member = saveMember("restore", Role.USER);
         memberService.withdrawMember(member.getEmail(), new MemberWithdrawalRequest(PASSWORD));
@@ -141,6 +177,7 @@ class SecurityRegressionIntegrationTest {
     }
 
     @Test
+    @DisplayName("관리자가 최고 관리자를 정지시키려고 하면 403을 반환한다")
     void adminCannotBanSuperadmin() throws Exception {
         Member admin = saveMember("admincheck", Role.ADMIN);
         Member superadmin = saveMember("supercheck", Role.SUPERADMIN);
@@ -152,6 +189,7 @@ class SecurityRegressionIntegrationTest {
     }
 
     @Test
+    @DisplayName("변경할 권한을 누락하면 400을 반환하고 기존 권한을 유지한다")
     void roleChangeRejectsMissingRole() throws Exception {
         Member superadmin = saveMember("rolecheck", Role.SUPERADMIN);
         Member target = saveMember("roletarget", Role.USER);
@@ -165,6 +203,7 @@ class SecurityRegressionIntegrationTest {
     }
 
     @Test
+    @DisplayName("존재하지 않는 회원과 잘못된 비밀번호의 로그인은 같은 에러 코드와 401을 반환한다")
     void unknownMemberAndWrongPasswordHaveTheSameLoginResponse() throws Exception {
         saveMember("logincheck", Role.USER);
 
@@ -178,6 +217,7 @@ class SecurityRegressionIntegrationTest {
     }
 
     @Test
+    @DisplayName("정지를 해제해도 기존 Access Token은 401을 반환하고 새 토큰으로만 접근할 수 있다")
     void unbanningDoesNotMakeOldAccessTokenValidAgain() throws Exception {
         Member member = saveMember("unbancheck", Role.USER);
         String oldToken = accessToken(member);
@@ -192,6 +232,7 @@ class SecurityRegressionIntegrationTest {
     }
 
     @Test
+    @DisplayName("관리자 권한을 복원해도 기존 관리자 토큰은 401을 반환하고 새 토큰으로만 접근할 수 있다")
     void restoringRoleDoesNotMakeOldAdminTokenValidAgain() throws Exception {
         Member member = saveMember("oldadmin", Role.ADMIN);
         String oldToken = accessToken(member);
@@ -206,6 +247,7 @@ class SecurityRegressionIntegrationTest {
     }
 
     @Test
+    @DisplayName("회원가입 시 이메일이 저장 가능한 길이를 초과하면 400을 반환한다")
     void signupRejectsEmailLongerThanDatabaseColumn() throws Exception {
         mvc.perform(post("/api/members/signup")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -217,6 +259,7 @@ class SecurityRegressionIntegrationTest {
     }
 
     @Test
+    @DisplayName("회원 검색어에 포함된 SQL 주석 구문은 일반 문자열로 검색한다")
     void sqlCommentInSearchKeywordIsTreatedAsText() {
         saveMember("adminsearch", Role.USER);
 

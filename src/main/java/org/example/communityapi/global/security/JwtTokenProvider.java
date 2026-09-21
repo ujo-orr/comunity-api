@@ -35,7 +35,7 @@ public class JwtTokenProvider {
         Instant now = Instant.now();
         Instant validity = now.plusMillis(expirationMs);
 
-        // 같은 순간에 발급해도 서로 다른 토큰이 되게 한다.
+        // 동시 발급 토큰 구분을 위한 고유 식별자 설정
         var builder = Jwts.builder()
                 .id(UUID.randomUUID().toString())
                 .subject(email)

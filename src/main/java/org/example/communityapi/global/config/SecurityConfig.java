@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.communityapi.global.security.CustomAccessDeniedHandler;
 import org.example.communityapi.global.security.CustomAuthenticationEntryPoint;
 import org.example.communityapi.global.security.JwtAuthenticationFilter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -36,11 +37,24 @@ public class SecurityConfig {
     }
 
     @Bean
+    public FilterRegistrationBean<JwtAuthenticationFilter> jwtFilterRegistration() {
+        // Security 체인 단독 실행을 위한 Servlet 필터 자동 등록 비활성화
+        FilterRegistrationBean<JwtAuthenticationFilter> registration =
+                new FilterRegistrationBean<>(jwtAuthenticationFilter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         boolean prod = environment.matchesProfiles("prod");
         boolean local = environment.matchesProfiles("local") && !prod;
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .logout(AbstractHttpConfigurer::disable)
+                .requestCache(AbstractHttpConfigurer::disable)
                 .headers(headers -> {
                     if (local) {
                         headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin);

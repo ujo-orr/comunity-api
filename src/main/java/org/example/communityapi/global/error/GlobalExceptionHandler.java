@@ -21,7 +21,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-    // 상태 코드와 헤더는 유지하고 오류 내용만 공통 형식으로 변경
+    // 상태 코드 및 헤더 유지와 공통 오류 응답 형식 적용
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(
             Exception e, Object body, HttpHeaders headers, HttpStatusCode status, WebRequest request
@@ -73,7 +73,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return response(ErrorCode.UNAUTHORIZED);
     }
 
-    // 서비스가 끝난 뒤 DB에 반영하다 생긴 오류도 여기서 처리
+    // 서비스 종료 후 DB 반영 과정의 오류 처리
     @ExceptionHandler({DataAccessException.class, TransactionException.class})
     protected ResponseEntity<ErrorResponse> handleStorageException(RuntimeException e) {
         ErrorCode errorCode = StorageExceptionClassifier.classify(e);

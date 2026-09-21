@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Set;
 
-// DB 오류 내용은 응답에 넣지 않고 종류만 구분
+// DB 오류 상세 노출 방지를 위한 오류 유형 분류
 public final class StorageExceptionClassifier {
     private StorageExceptionClassifier() {}
 
@@ -28,7 +28,7 @@ public final class StorageExceptionClassifier {
             }
             if (cause instanceof SQLException sql) {
                 String state = sql.getSQLState();
-                // 중복값이나 다른 데이터의 참조 때문에 실패한 경우
+                // 중복값 또는 참조 무결성 위반 판별
                 if ("23505".equals(state) || "23503".equals(state) || "23506".equals(state)
                         || ("23000".equals(state) && Set.of(1062, 1451, 1452).contains(sql.getErrorCode()))) {
                     return ErrorCode.DATA_CONFLICT;

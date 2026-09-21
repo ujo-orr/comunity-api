@@ -6,6 +6,7 @@ import jakarta.servlet.FilterChain;
 import org.example.communityapi.member.Member;
 import org.example.communityapi.member.MemberRepository;
 import org.example.communityapi.member.Role;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,6 +51,7 @@ class JwtAuthenticationFilterTest {
     void clean() { SecurityContextHolder.clearContext(); }
 
     @Test
+    @DisplayName("Redis 장애가 발생하면 인증 정보를 제거하고 요청 처리를 중단하며 503을 반환한다")
     void redisOutageStopsChainAndClearsAuthentication() throws Exception {
         when(values.get(token)).thenThrow(new RedisConnectionFailureException("redis-secret"));
         filter.doFilter(request, response, chain);
@@ -58,6 +60,7 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
+    @DisplayName("인증 중 데이터베이스 장애가 발생하면 인증 정보를 제거하고 요청 처리를 중단하며 503을 반환한다")
     void databaseOutageStopsChainAndClearsAuthentication() throws Exception {
         when(members.findByEmail(anyString())).thenThrow(new DataAccessResourceFailureException("db-secret"));
         filter.doFilter(request, response, chain);
@@ -65,6 +68,7 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
+    @DisplayName("인증 중 내부 오류가 발생하면 인증 정보를 제거하고 내부 내용을 노출하지 않은 채 500을 반환한다")
     void programmingErrorIsNotDisguisedAsInvalidTokenOrOutage() throws Exception {
         when(members.findByEmail(anyString())).thenThrow(new IllegalArgumentException("internal-secret"));
         filter.doFilter(request, response, chain);
@@ -75,6 +79,7 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
+    @DisplayName("후속 요청 처리 중 발생한 예외는 그대로 전달하고 요청을 재처리하지 않는다")
     void downstreamExceptionIsPropagatedAndChainIsNotRetried() throws Exception {
         when(values.get(token)).thenReturn("logout");
         var downstreamFailure = new JwtException("failure outside authentication");
@@ -85,6 +90,7 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
+    @DisplayName("유효한 토큰으로 회원을 인증하고 후속 요청을 한 번만 처리한다")
     void validTokenAuthenticatesAndCallsChainOnce() throws Exception {
         filter.doFilter(request, response, chain);
         assertThat(SecurityContextHolder.getContext().getAuthentication().getName()).isEqualTo("filter@test.com");

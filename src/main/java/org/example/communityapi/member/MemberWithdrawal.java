@@ -38,7 +38,7 @@ public class MemberWithdrawal extends BaseTimeEntity {
         this.role = member.getRole();
         this.originalCreatedAt = member.getCreatedAt();
 
-        // 30일 동안은 탈퇴를 취소할 수 있다.
+        // 30일간의 탈퇴 취소 유예 기간 설정
         this.expireAt = LocalDateTime.now().plusDays(30);
     }
 

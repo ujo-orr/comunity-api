@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
-    // 여러 명이 동시에 조회해도 조회수가 빠지지 않게 DB에서 바로 올린다.
+    // 동시 조회 누락 방지를 위한 DB 조회수 직접 증가
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
         UPDATE Post p
@@ -31,7 +31,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     boolean existsByCategoryId(Long categoryId);
 
-    // 작성자를 확인할 때 쿼리가 한 번 더 나가지 않도록 함께 조회한다.
+    // 작성자 확인 시 추가 쿼리 방지를 위한 연관 조회
     @Query("SELECT p FROM Post p JOIN FETCH p.member WHERE p.id = :id")
     java.util.Optional<Post> findByIdWithMember(@Param("id") Long id);
 

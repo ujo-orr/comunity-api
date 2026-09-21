@@ -2,6 +2,7 @@ package org.example.communityapi.global.security;
 
 import org.example.communityapi.member.MemberRepository;
 import org.example.communityapi.member.Role;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,6 +23,7 @@ class AdminBootstrapIntegrationTest {
     @Autowired PasswordEncoder passwordEncoder;
 
     @Test
+    @DisplayName("관리자와 최고 관리자는 각자 설정된 비밀번호와 권한으로 생성된다")
     void createsAdministratorsWithSeparateConfiguredPasswords() {
         var admin = memberRepository.findByEmail("admin@system.com").orElseThrow();
         var superAdmin = memberRepository.findByEmail("superAdmin@system.com").orElseThrow();

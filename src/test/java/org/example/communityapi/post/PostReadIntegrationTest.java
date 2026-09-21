@@ -72,6 +72,7 @@ class PostReadIntegrationTest {
     }
 
     @Test
+    @DisplayName("게시글 상세 조회 시 조회수를 증가시켜 반환하고 수정 시각은 유지한다")
     void detailIncrementsAndReturnsCurrentCount() throws Exception {
         Long id = postIds.getFirst();
         var updatedAt = posts.findById(id).orElseThrow().getUpdatedAt();
@@ -86,6 +87,7 @@ class PostReadIntegrationTest {
     }
 
     @Test
+    @DisplayName("게시글 목록은 페이지 단위로 반환하고 조회수는 증가시키지 않는다")
     void listsArePagedAndDoNotIncrementViews() throws Exception {
         for (String path : List.of("/api/posts")) {
             mvc.perform(get(path).param("keyword", "paging").param("size", "2"))
@@ -103,7 +105,8 @@ class PostReadIntegrationTest {
     }
 
     @Test
-    void filtersAndEmptyPages() throws Exception {
+    @DisplayName("검색 조건에 맞는 게시글과 빈 페이지를 반환하고 공백 검색어는 400으로 거부한다")
+    void filtersPostsReturnsEmptyPagesAndRejectsBlankKeywords() throws Exception {
 
         mvc.perform(get("/api/posts").param("keyword", "paging 1"))
                 .andExpect(status().isOk()).andExpect(jsonPath("totalElements").value(1))
@@ -126,6 +129,7 @@ class PostReadIntegrationTest {
     }
 
     @Test
+    @DisplayName("본문이나 닉네임 일부로 검색해도 게시글을 중복 없이 반환하고 조회수는 유지한다")
     void searchesContentAndPartialNicknameWithoutDuplicatePosts() throws Exception {
         for (String keyword : List.of("body", "234", "  paging  ")) {
             mvc.perform(get("/api/posts").param("keyword", keyword).param("size", "2"))
@@ -146,6 +150,7 @@ class PostReadIntegrationTest {
     }
 
     @Test
+    @DisplayName("검색어의 와일드카드 문자는 일반 문자로 검색한다")
     void wildcardCharactersAreSearchedLiterally() throws Exception {
         new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
             posts.findById(postIds.getFirst()).orElseThrow()
@@ -160,6 +165,7 @@ class PostReadIntegrationTest {
     }
 
     @Test
+    @DisplayName("댓글은 요청한 게시글에 속한 것만 오래된 순서로 페이지 단위로 반환한다")
     void commentsArePagedOldestFirstAndScopedToPost() throws Exception {
 
         mvc.perform(get("/api/posts/{id}/comments", postIds.getFirst()).param("size", "2"))
@@ -177,6 +183,7 @@ class PostReadIntegrationTest {
     }
 
     @Test
+    @DisplayName("존재하지 않는 게시글의 상세나 댓글 목록을 조회하면 404를 반환한다")
     void missingResourcesReturn404() throws Exception {
         for (String path : List.of(
                 "/api/posts/9223372036854775807",
@@ -186,6 +193,7 @@ class PostReadIntegrationTest {
     }
 
     @Test
+    @DisplayName("게시글이나 댓글 목록의 페이지 파라미터가 유효하지 않으면 400을 반환한다")
     void invalidPageParametersReturn400() throws Exception {
         for (String path : List.of(
                 "/api/posts",
@@ -207,6 +215,7 @@ class PostReadIntegrationTest {
     }
 
     @Test
+    @DisplayName("게시글을 동시에 조회해도 조회수 증가분이 누락되지 않는다")
     void concurrentReadsDoNotLoseIncrements() throws Exception {
         try (var executor = Executors.newFixedThreadPool(6)) {
             List<Future<?>> futures = new ArrayList<>();
@@ -229,10 +238,11 @@ class PostReadIntegrationTest {
     }
 
     @Test
+    @DisplayName("이미 조회한 게시글을 수정해도 다른 요청이 증가시킨 조회수는 유지한다")
     void editingPreviouslyLoadedPostDoesNotOverwriteViewCount() {
         new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
             var loaded = posts.findById(postIds.getFirst()).orElseThrow();
-            // 다른 요청이 조회수를 올려도 수정할 때 덮어쓰면 안 된다.
+            // 게시글 수정 시 다른 요청의 조회수 증가분 보존 검증
             jdbc.update("update posts set view_count = view_count + 1 where id = ?", loaded.getId());
             loaded.updatePost("edited", "edited body", category);
         });

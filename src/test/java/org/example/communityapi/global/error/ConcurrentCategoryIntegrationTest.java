@@ -1,6 +1,7 @@
 package org.example.communityapi.global.error;
 
 import org.example.communityapi.category.CategoryRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -27,6 +28,7 @@ class ConcurrentCategoryIntegrationTest {
     @SpyBean CategoryRepository categories;
 
     @Test
+    @DisplayName("같은 이름의 카테고리를 동시에 생성하면 하나는 201을 반환하고 다른 하나는 409를 반환한다")
     void twoRequestsPassingDuplicateCheckProduceOneSuccessAndOneConflict() throws Exception {
         String name = "race-test";
         var barrier = new CyclicBarrier(2);
