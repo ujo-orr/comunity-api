@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -34,6 +35,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @ParameterizedTest
+    @DisplayName("요청 본문이 없거나 형식이 잘못되면 400을 반환한다")
     @ValueSource(strings = {"", "{", "{\"password\":{}}"})
     void missingOrMalformedBodyReturns400(String body) throws Exception {
         mvc.perform(post("/test/body").contentType(MediaType.APPLICATION_JSON).content(body))
@@ -41,6 +43,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("입력값 검증에 실패하면 비밀값을 노출하지 않고 필드와 사유를 포함한 400을 반환한다")
     void validationPreservesFieldAndReasonWithoutEchoingSecrets() throws Exception {
         mvc.perform(post("/test/body").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"password\":\"secret\"}"))
@@ -52,6 +55,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("필수 파라미터가 없거나 값이 유효하지 않으면 400을 반환한다")
     void missingAndInvalidParametersReturn400() throws Exception {
         mvc.perform(get("/test/parameter"))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("code").value("C001"));
@@ -62,6 +66,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("지원하지 않는 HTTP 메서드로 요청하면 허용 메서드 헤더와 함께 405를 반환한다")
     void unsupportedMethodPreservesAllowHeader() throws Exception {
         mvc.perform(delete("/test/body"))
                 .andExpect(status().isMethodNotAllowed()).andExpect(jsonPath("code").value("C002"))
@@ -69,24 +74,28 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("지원하지 않는 요청 콘텐츠 타입이면 415를 반환한다")
     void unsupportedContentTypeReturns415() throws Exception {
         mvc.perform(post("/test/body").contentType(MediaType.TEXT_PLAIN).content("hello"))
                 .andExpect(status().isUnsupportedMediaType()).andExpect(jsonPath("code").value("C005"));
     }
 
     @Test
+    @DisplayName("지원하지 않는 응답 콘텐츠 타입을 요청하면 406을 반환한다")
     void unsupportedResponseTypeReturns406() throws Exception {
         mvc.perform(get("/test/json").accept(MediaType.APPLICATION_XML))
                 .andExpect(status().isNotAcceptable()).andExpect(jsonPath("code").value("C006"));
     }
 
     @Test
+    @DisplayName("존재하지 않는 리소스를 요청하면 404를 반환한다")
     void missingResourceReturns404() throws Exception {
         mvc.perform(get("/test/missing"))
                 .andExpect(status().isNotFound()).andExpect(jsonPath("code").value("C004"));
     }
 
     @Test
+    @DisplayName("첨부파일이 누락되면 400을 반환하고 업로드 용량을 초과하면 413을 반환한다")
     void missingFileAndOversizedUploadHaveDistinctErrors() throws Exception {
         mvc.perform(multipart("/test/file"))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("code").value("E009"));
@@ -95,6 +104,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("인증에 실패하면 401을 반환하고 접근 권한이 없으면 403을 반환한다")
     void securityExceptionsRetain401And403() throws Exception {
         mvc.perform(get("/test/unauthorized"))
                 .andExpect(status().isUnauthorized()).andExpect(jsonPath("code").value("A002"));
@@ -103,12 +113,14 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("게시글 없음 오류가 발생하면 기존 에러 코드와 함께 404를 반환한다")
     void businessExceptionRetainsExistingCode() throws Exception {
         mvc.perform(get("/test/business"))
                 .andExpect(status().isNotFound()).andExpect(jsonPath("code").value("E002"));
     }
 
     @Test
+    @DisplayName("예상하지 못한 오류가 발생하면 내부 정보를 노출하지 않고 500을 반환한다")
     void unexpectedFailureDoesNotLeakInternalDetails() throws Exception {
         mvc.perform(get("/test/unexpected"))
                 .andExpect(status().isInternalServerError()).andExpect(jsonPath("code").value("S001"))
@@ -116,6 +128,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("응답값 검증에 실패하면 500을 반환한다")
     void returnValueValidationIsServerError() throws Exception {
         mvc.perform(get("/test/invalid-return"))
                 .andExpect(status().isInternalServerError()).andExpect(jsonPath("code").value("S001"));

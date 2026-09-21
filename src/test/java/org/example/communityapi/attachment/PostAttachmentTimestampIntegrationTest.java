@@ -6,6 +6,7 @@ import org.example.communityapi.member.Member;
 import org.example.communityapi.member.MemberRepository;
 import org.example.communityapi.post.Post;
 import org.example.communityapi.post.PostRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ class PostAttachmentTimestampIntegrationTest {
     @TempDir Path uploadDirectory;
 
     @Test
+    @DisplayName("첨부파일 업로드가 롤백되면 디스크에 저장된 파일도 삭제된다")
     void rolledBackUploadDoesNotLeaveFileOnDisk() {
         Member member = members.save(Member.builder()
                 .email("rollback@test.com")
@@ -72,6 +74,7 @@ class PostAttachmentTimestampIntegrationTest {
     }
 
     @Test
+    @DisplayName("첨부파일은 업로드 시각을 기록하고 수정 시각은 별도 저장하지 않는다")
     void attachmentStoresUploadTimeWithoutModificationColumn() {
         Member member = members.save(Member.builder()
                 .email("attachment-time@test.com")

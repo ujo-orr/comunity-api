@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.example.communityapi.member.Member;
 import org.example.communityapi.member.MemberRepository;
 import org.example.communityapi.member.Role;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -74,6 +75,7 @@ class JwtAuthenticationIntegrationTest {
     }
 
     @Test
+    @DisplayName("유효한 Access Token으로 내 정보를 조회하면 200과 회원 정보를 반환한다")
     void validTokenCanAccessProtectedEndpoint() throws Exception {
         mvc.perform(get("/api/members/me").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
@@ -81,6 +83,7 @@ class JwtAuthenticationIntegrationTest {
     }
 
     @Test
+    @DisplayName("기본 사용자 인증을 비활성화하고 JWT 인증을 인가 전에 한 번만 적용하도록 구성한다")
     void defaultUserAndServletFilterRegistrationAreAbsent() {
         assertThat(context.getBeansOfType(UserDetailsService.class)).isEmpty();
         assertThat(jwtFilterRegistration.isEnabled()).isFalse();
@@ -96,6 +99,7 @@ class JwtAuthenticationIntegrationTest {
     }
 
     @Test
+    @DisplayName("실제 HTTP 요청은 JWT 인증을 한 번만 수행하고 세션 쿠키 없이 200을 반환한다")
     void realServletRequestExecutesJwtFilterOnce() throws Exception {
         clearInvocations(filter, valueOperations);
         HttpHeaders headers = new HttpHeaders();
@@ -108,6 +112,7 @@ class JwtAuthenticationIntegrationTest {
     }
 
     @Test
+    @DisplayName("인증 정보를 세션에 유지하지 않아 후속 요청에 토큰이 없으면 401을 반환한다")
     void authenticationIsNotRetainedInSession() throws Exception {
         mvc.perform(get("/api/members/me").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
@@ -119,6 +124,7 @@ class JwtAuthenticationIntegrationTest {
     }
 
     @Test
+    @DisplayName("잘못된 토큰이나 Refresh Token으로 보호 API에 접근하면 401을 반환한다")
     void malformedAndRefreshTokensCannotAuthenticate() throws Exception {
         for (String invalid : new String[]{"invalid.jwt", jwtTokenProvider.createRefreshToken(member.getEmail())}) {
             mvc.perform(get("/api/members/me").header("Authorization", "Bearer " + invalid))
@@ -130,6 +136,7 @@ class JwtAuthenticationIntegrationTest {
     }
 
     @Test
+    @DisplayName("회원과 토큰의 버전이 일치하지 않으면 401을 반환한다")
     void tokenVersionMismatchIsRejected() throws Exception {
         String stale = jwtTokenProvider.createAccessToken(member.getEmail(), member.getRole(), member.getId(),
                 member.getTokenVersion() + 1);
@@ -139,6 +146,7 @@ class JwtAuthenticationIntegrationTest {
     }
 
     @Test
+    @DisplayName("권한이 없는 회원이 관리자 API나 카테고리 생성 API에 접근하면 403을 반환한다")
     void insufficientRoleReturnsExistingForbiddenResponse() throws Exception {
         mvc.perform(get("/api/admin/members").header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden())
@@ -152,6 +160,7 @@ class JwtAuthenticationIntegrationTest {
     }
 
     @Test
+    @DisplayName("토큰이 없거나 유효하지 않아도 공개 게시글 목록과 회원 검색은 200을 반환한다")
     void publicReadsAllowAnonymousRequestsEvenWithInvalidToken() throws Exception {
         for (String authorization : new String[]{"", "Bearer invalid.jwt"}) {
             mvc.perform(get("/api/posts").header("Authorization", authorization))
@@ -163,12 +172,14 @@ class JwtAuthenticationIntegrationTest {
     }
 
     @Test
+    @DisplayName("기본 설정에서는 관리자와 최고 관리자 계정을 자동으로 생성하지 않는다")
     void doesNotCreateAdministratorAccountsByDefault() {
         assertThat(memberRepository.findByEmail("admin@system.com")).isEmpty();
         assertThat(memberRepository.findByEmail("superAdmin@system.com")).isEmpty();
     }
 
     @Test
+    @DisplayName("정지된 회원이 기존 Access Token으로 보호 API에 접근하면 401을 반환한다")
     void bannedMemberCannotUseExistingToken() throws Exception {
         member.ban();
         memberRepository.save(member);
@@ -178,6 +189,7 @@ class JwtAuthenticationIntegrationTest {
     }
 
     @Test
+    @DisplayName("회원 권한이 변경되면 기존 Access Token으로 보호 API에 접근할 때 401을 반환한다")
     void changedRoleInvalidatesExistingToken() throws Exception {
         member.changeRole(Role.ADMIN);
         memberRepository.save(member);
@@ -187,6 +199,7 @@ class JwtAuthenticationIntegrationTest {
     }
 
     @Test
+    @DisplayName("삭제된 회원의 기존 Access Token으로 보호 API에 접근하면 401을 반환한다")
     void missingMemberCannotUseExistingToken() throws Exception {
         memberRepository.deleteById(member.getId());
         mvc.perform(get("/api/members/me").header("Authorization", "Bearer " + token))
@@ -195,6 +208,7 @@ class JwtAuthenticationIntegrationTest {
     }
 
     @Test
+    @DisplayName("인증 중 Redis 연결에 실패하면 503을 반환한다")
     void redisFailureReturnsServiceUnavailable() throws Exception {
         when(valueOperations.get(anyString())).thenThrow(new org.springframework.data.redis.RedisConnectionFailureException("redis unavailable"));
         mvc.perform(get("/api/members/me").header("Authorization", "Bearer " + token))
@@ -203,6 +217,7 @@ class JwtAuthenticationIntegrationTest {
     }
 
     @Test
+    @DisplayName("로그아웃한 Access Token으로 보호 API에 접근하면 401을 반환한다")
     void loggedOutTokenIsRejected() throws Exception {
         when(valueOperations.get(token)).thenReturn("logout");
         mvc.perform(get("/api/members/me").header("Authorization", "Bearer " + token))

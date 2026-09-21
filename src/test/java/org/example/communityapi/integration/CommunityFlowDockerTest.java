@@ -11,6 +11,7 @@ import org.example.communityapi.member.dto.MemberSignUpRequest;
 import org.example.communityapi.post.PostRepository;
 import org.example.communityapi.post.dto.PostCreateRequest;
 import org.example.communityapi.post.dto.PostResponse;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -82,6 +83,7 @@ class CommunityFlowDockerTest {
     @Autowired JdbcTemplate jdbc;
 
     @Test
+    @DisplayName("MySQL과 Redis 환경에서 가입과 로그인 후 게시글과 첨부파일을 이용할 수 있고 로그아웃하면 보호 API는 401을 반환한다")
     void signupLoginReadAndLogoutWorkWithRealMySqlAndRedis() {
         // 관리자 전용 생성 정책에 따른 테스트 카테고리 사전 저장
         Long categoryId = categories.save(Category.builder().name("docker-test").build()).getId();

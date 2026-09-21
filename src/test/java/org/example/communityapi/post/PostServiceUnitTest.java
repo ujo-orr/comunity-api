@@ -9,6 +9,7 @@ import org.example.communityapi.global.error.ErrorCode;
 import org.example.communityapi.member.Member;
 import org.example.communityapi.member.MemberRepository;
 import org.example.communityapi.post.dto.PostUpdateRequest;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -31,6 +32,7 @@ class PostServiceUnitTest {
     @InjectMocks PostService service;
 
     @Test
+    @DisplayName("공백 검색어는 데이터 조회 없이 빈 검색어 오류로 거부한다")
     void blankKeywordIsRejectedBeforeAnyRepositoryCall() {
         for (String keyword : java.util.List.of("", " ", "\t\n")) {
             assertThatThrownBy(() -> service.getPosts(keyword, org.springframework.data.domain.PageRequest.of(0, 20)))
@@ -41,6 +43,7 @@ class PostServiceUnitTest {
     }
 
     @Test
+    @DisplayName("작성자는 게시글 제목과 본문 및 카테고리를 수정할 수 있다")
     void writerCanUpdatePostAndCategory() {
         Member writer =
                 Member.builder()
@@ -79,6 +82,7 @@ class PostServiceUnitTest {
     }
 
     @Test
+    @DisplayName("작성자가 아닌 회원의 수정 요청은 접근 거부 오류로 처리하고 게시글과 카테고리를 변경하지 않는다")
     void otherMemberCannotUpdatePostOrLoadNewCategory() {
         Member writer =
                 Member
@@ -107,7 +111,8 @@ class PostServiceUnitTest {
     }
 
     @Test
-    void missingPostDoesNotIncrementViewCount() {
+    @DisplayName("조회수를 증가시킬 게시글이 없으면 게시글 없음 오류를 반환하고 상세 조회를 진행하지 않는다")
+    void missingPostThrowsNotFoundWithoutLoadingDetails() {
         when(posts.incrementViewCount(99L)).thenReturn(0);
 
         assertThatThrownBy(() -> service.getPost(99L))

@@ -1,5 +1,6 @@
 package org.example.communityapi.global.config;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -23,6 +24,7 @@ class LocalApiDocsIntegrationTest {
     @Autowired MockMvc mvc;
 
     @Test
+    @DisplayName("로컬 환경에서는 로그인 없이 API 문서를 조회하면 200을 반환한다")
     void localProfileServesApiDocsWithoutLogin() throws Exception {
         mvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
@@ -31,6 +33,7 @@ class LocalApiDocsIntegrationTest {
     }
 
     @Test
+    @DisplayName("로컬 환경에서는 로그인 없이 Swagger UI에 접근하면 200을 반환한다")
     void localProfileServesSwaggerUiWithoutLogin() throws Exception {
         mvc.perform(get("/swagger-ui/index.html"))
                 .andExpect(status().isOk())

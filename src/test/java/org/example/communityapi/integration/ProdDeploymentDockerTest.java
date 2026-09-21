@@ -2,6 +2,7 @@ package org.example.communityapi.integration;
 
 import org.example.communityapi.attachment.AttachmentStorage;
 import org.example.communityapi.attachment.S3AttachmentStorage;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +59,8 @@ class ProdDeploymentDockerTest {
     @Autowired Job cleanupJob;
 
     @Test
-    void prodUsesS3AndFlywayAndCanRunScheduledBatch() throws Exception {
+    @DisplayName("운영 환경은 S3와 마이그레이션된 스키마를 사용하고 첨부파일 정리 배치를 정상 완료한다")
+    void prodUsesS3AndFlywayAndCompletesCleanupBatch() throws Exception {
         assertThat(storage).isInstanceOf(S3AttachmentStorage.class);
         assertThat(environment.getProperty("spring.jpa.hibernate.ddl-auto")).isEqualTo("validate");
         assertThat(environment.getProperty("springdoc.api-docs.enabled", Boolean.class)).isFalse();
@@ -72,6 +74,7 @@ class ProdDeploymentDockerTest {
     }
 
     @Test
+    @DisplayName("운영 환경에서는 최고 관리자도 API 문서와 데이터베이스 콘솔에 접근하면 403을 반환한다")
     @WithMockUser(roles = "SUPERADMIN")
     void prodDeniesDocsAndConsoleEvenForAdministrators() throws Exception {
         for (String path : new String[]{"/v3/api-docs", "/swagger-ui/index.html", "/h2-console/"}) {

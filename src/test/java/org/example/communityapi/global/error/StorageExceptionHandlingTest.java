@@ -1,5 +1,6 @@
 package org.example.communityapi.global.error;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -31,6 +32,7 @@ class StorageExceptionHandlingTest {
     }
 
     @ParameterizedTest
+    @DisplayName("저장소 장애는 503으로 충돌은 409로 내부 오류는 500으로 응답하며 내부 정보를 노출하지 않는다")
     @MethodSource("failures")
     void classifiesFailuresWithoutExposingStorageDetails(RuntimeException exception, int status, String code)
             throws Exception {

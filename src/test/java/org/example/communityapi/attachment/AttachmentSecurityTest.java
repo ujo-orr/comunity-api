@@ -3,6 +3,7 @@ package org.example.communityapi.attachment;
 import org.example.communityapi.global.error.BusinessException;
 import org.example.communityapi.global.error.ErrorCode;
 import org.example.communityapi.post.PostRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,6 +23,7 @@ class AttachmentSecurityTest {
     @TempDir Path uploadDirectory;
 
     @ParameterizedTest
+    @DisplayName("경로나 제어 문자가 포함된 파일명은 유효하지 않은 파일로 거부한다")
     @ValueSource(strings = {"../secret.txt", "folder/file.txt", "folder\\file.txt", "file\r\nheader.txt", ".."})
     void rejectsPathsAndControlCharactersInFilename(String filename) {
         FileStorageService storage = new FileStorageService(uploadDirectory.toString());
@@ -33,6 +35,7 @@ class AttachmentSecurityTest {
     }
 
     @Test
+    @DisplayName("작은따옴표가 포함된 일반 파일명도 원본 내용 그대로 저장할 수 있다")
     void ordinaryFilenameWithApostropheCanBeStored() throws Exception {
         FileStorageService storage = new FileStorageService(uploadDirectory.toString());
         var file = new MockMultipartFile("files", "admin'--.txt", "text/plain", new byte[]{1, 2, 3});
@@ -44,6 +47,7 @@ class AttachmentSecurityTest {
     }
 
     @Test
+    @DisplayName("첨부파일 다운로드는 업로더가 지정한 콘텐츠 타입 대신 바이너리 첨부파일로 응답한다")
     void downloadDoesNotUseUploaderContentType() {
         PostAttachmentService service = mock(PostAttachmentService.class);
         PostAttachmentController controller = new PostAttachmentController(service);
@@ -60,6 +64,7 @@ class AttachmentSecurityTest {
     }
 
     @Test
+    @DisplayName("첨부파일을 10개 넘게 업로드하면 파일을 저장하지 않고 거부한다")
     void tooManyFilesAreRejectedBeforeWritingAnything() {
         var attachments = mock(PostAttachmentRepository.class);
         var posts = mock(PostRepository.class);
