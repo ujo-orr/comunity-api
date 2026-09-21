@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 public abstract class BaseTimeEntity {
+    // 생성/수정 시각은 JPA Auditing이 관리한다. 벌크 조회수 갱신은 수정 시각을 변경하지 않는다.
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;

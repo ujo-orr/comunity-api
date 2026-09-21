@@ -5,10 +5,13 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.communityapi.global.entity.BaseTimeEntity;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "member_withdrawal")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MemberWithdrawal extends BaseTimeEntity {
@@ -17,16 +20,31 @@ public class MemberWithdrawal extends BaseTimeEntity {
     private Long id;
 
     private Long originalId;
+
+    // 탈퇴 이력은 기존 DB에 저장된 이메일도 보존하므로 회원가입 제한(30자)과 구분한다.
+    @Column(nullable = false, length = 255)
     private String email;
+
+    @Column(nullable = false, length = 255)
     private String password;
+
+    @Column(nullable = false, length = 20)
     private String nickname;
+
+    @Column(length = 20)
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 20)
     private Role role;
 
     private LocalDateTime originalCreatedAt;
 
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime deletedAt;
+
+    @Column(nullable = false)
     private LocalDateTime expireAt;
 
     public MemberWithdrawal(Member member) {
@@ -39,7 +57,8 @@ public class MemberWithdrawal extends BaseTimeEntity {
         this.originalCreatedAt = member.getCreatedAt();
 
         // 30일간의 탈퇴 취소 유예 기간 설정
-        this.expireAt = LocalDateTime.now().plusDays(30);
+        this.deletedAt = LocalDateTime.now();
+        this.expireAt = deletedAt.plusDays(30);
     }
 
     public Member toMember() {

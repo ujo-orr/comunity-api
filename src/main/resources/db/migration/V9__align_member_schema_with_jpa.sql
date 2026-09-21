@@ -1,0 +1,36 @@
+-- 적용 전 docs/sql/V9__preflight.sql로 기존 데이터 충돌을 확인한다.
+-- 데이터는 자동 삭제/수정하지 않는다. 충돌이 있으면 영구 테이블 변경 전에 중단한다.
+CREATE TEMPORARY TABLE v9_member_schema_preflight (
+    valid TINYINT NOT NULL,
+    CONSTRAINT v9_requires_valid_member_data CHECK (valid = 1)
+);
+
+INSERT INTO v9_member_schema_preflight (valid)
+SELECT CASE WHEN
+    EXISTS (SELECT 1 FROM members WHERE CHAR_LENGTH(email) > 30)
+    OR EXISTS (SELECT phone_number FROM members GROUP BY phone_number HAVING COUNT(*) > 1)
+    OR EXISTS (SELECT 1 FROM members
+               WHERE CAST(role AS BINARY) NOT IN ('USER', 'ADMIN', 'SUPERADMIN')
+                  OR CAST(status AS BINARY) NOT IN ('ACTIVE', 'BANNED'))
+    OR EXISTS (SELECT 1 FROM member_withdrawal
+               WHERE CAST(role AS BINARY) NOT IN ('USER', 'ADMIN', 'SUPERADMIN'))
+    THEN 0 ELSE 1 END;
+
+DROP TEMPORARY TABLE v9_member_schema_preflight;
+
+-- 길이 축소 도중 데이터가 잘리는 것을 방지한다. 기존 세션 설정은 성공 후 복원한다.
+SET @v9_previous_sql_mode = @@SESSION.sql_mode;
+SET SESSION sql_mode = CONCAT_WS(',', @@SESSION.sql_mode, 'STRICT_ALL_TABLES');
+
+ALTER TABLE members
+    MODIFY COLUMN email VARCHAR(30) NOT NULL,
+    ADD CONSTRAINT uk_members_phone_number UNIQUE (phone_number),
+    MODIFY COLUMN created_at DATETIME(6) NOT NULL,
+    MODIFY COLUMN updated_at DATETIME(6) NOT NULL,
+    ADD CONSTRAINT chk_members_role CHECK (CAST(role AS BINARY) IN ('USER', 'ADMIN', 'SUPERADMIN')),
+    ADD CONSTRAINT chk_members_status CHECK (CAST(status AS BINARY) IN ('ACTIVE', 'BANNED'));
+
+ALTER TABLE member_withdrawal
+    ADD CONSTRAINT chk_member_withdrawal_role CHECK (CAST(role AS BINARY) IN ('USER', 'ADMIN', 'SUPERADMIN'));
+
+SET SESSION sql_mode = @v9_previous_sql_mode;

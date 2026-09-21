@@ -63,11 +63,12 @@ class ProdDeploymentDockerTest {
     void prodUsesS3AndFlywayAndCompletesCleanupBatch() throws Exception {
         assertThat(storage).isInstanceOf(S3AttachmentStorage.class);
         assertThat(environment.getProperty("spring.jpa.hibernate.ddl-auto")).isEqualTo("validate");
+        assertThat(environment.getProperty("spring.flyway.enabled", Boolean.class)).isTrue();
         assertThat(environment.getProperty("springdoc.api-docs.enabled", Boolean.class)).isFalse();
         assertThat(environment.getProperty("springdoc.swagger-ui.enabled", Boolean.class)).isFalse();
         assertThat(environment.getProperty("spring.h2.console.enabled", Boolean.class)).isFalse();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM flyway_schema_history WHERE success = 1",
-                Integer.class)).isEqualTo(8);
+                Integer.class)).isEqualTo(9);
         var execution = launcher.run(cleanupJob,
                 new JobParametersBuilder().addLong("time", System.nanoTime()).toJobParameters());
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
