@@ -10,7 +10,7 @@ import java.util.Optional;
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
     Optional<RefreshToken> findByEmail(String email);
 
-    // 같은 토큰으로 요청이 겹치면 하나씩 처리한다.
+    // 동일 토큰의 동시 요청 직렬화
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<RefreshToken> findByToken(String token);
     void deleteByEmail(String email);

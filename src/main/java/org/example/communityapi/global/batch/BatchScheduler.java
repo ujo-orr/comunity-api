@@ -19,7 +19,7 @@ public class BatchScheduler {
     @Scheduled(cron = "0 0 4 * * *")
     public void runCleanupJob() throws Exception {
         JobParameters jobParameters = new JobParametersBuilder()
-                .addLong("time", System.currentTimeMillis()) // 같은 작업도 매번 실행되도록 시간 추가
+                .addLong("time", System.currentTimeMillis()) // Batch 재실행을 위한 시간 파라미터 설정
                 .toJobParameters();
 
         jobLauncher.run(cleanupJob, jobParameters);

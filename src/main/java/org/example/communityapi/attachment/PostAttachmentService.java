@@ -35,7 +35,7 @@ public class PostAttachmentService {
         post.validateWriter(email);
 
         List<String> storageKeys = new ArrayList<>();
-        // DB 저장이 취소되면 저장소에 먼저 저장한 파일도 지운다.
+        // DB 저장 롤백 시 선행 저장 파일 삭제
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCompletion(int status) {

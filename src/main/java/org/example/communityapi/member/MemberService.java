@@ -20,7 +20,7 @@ public class MemberService {
 
     @Transactional
     public Long signUp(MemberSignUpRequest request) {
-        // 탈퇴 유예 중인 이메일은 복구할 수 있도록 남겨 둔다.
+        // 탈퇴 유예 기간 중 계정 복구를 위한 이메일 보존
         if (memberRepository.existsByEmail(request.email())
                 || memberWithdrawalRepository.existsByEmail(request.email())) {
             throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
@@ -94,7 +94,7 @@ public class MemberService {
         MemberWithdrawal withdrawal = new MemberWithdrawal(member);
         memberWithdrawalRepository.save(withdrawal);
 
-        // 탈퇴한 계정의 토큰은 다시 발급하지 않는다.
+        // 탈퇴 계정의 토큰 재발급 방지
         refreshTokenRepository.deleteByEmail(email);
 
         memberRepository.delete(member);

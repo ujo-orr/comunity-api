@@ -83,7 +83,7 @@ class CommunityFlowDockerTest {
 
     @Test
     void signupLoginReadAndLogoutWorkWithRealMySqlAndRedis() {
-        // 카테고리는 관리자만 만들 수 있어서 테스트 전에 미리 저장
+        // 관리자 전용 생성 정책에 따른 테스트 카테고리 사전 저장
         Long categoryId = categories.save(Category.builder().name("docker-test").build()).getId();
         MemberSignUpRequest signup = new MemberSignUpRequest(
                 "docker-flow@test.com", "Password1!", "01012345678", "테스터1");
@@ -158,7 +158,7 @@ class CommunityFlowDockerTest {
         assertThat(redisTemplate.opsForValue().get(login.accessToken())).isEqualTo("logout");
         assertThat(redisTemplate.getExpire(login.accessToken(), TimeUnit.SECONDS)).isPositive();
 
-        // 게시글 조회는 공개 API이므로 로그아웃한 토큰으로도 익명 조회가 가능하다.
+        // 로그아웃 토큰을 사용한 공개 게시글 익명 조회 검증
         ResponseEntity<PostResponse> publicReadAfterLogout = http.exchange("/api/posts/" + postId,
                 HttpMethod.GET, new HttpEntity<>(authorization), PostResponse.class);
         assertThat(publicReadAfterLogout.getStatusCode()).isEqualTo(OK);
@@ -166,7 +166,7 @@ class CommunityFlowDockerTest {
         assertThat(publicReadAfterLogout.getBody().viewCount()).isEqualTo(2);
         assertThat(posts.findById(postId).orElseThrow().getViewCount()).isEqualTo(2);
 
-        // 같은 Access Token이 인증 필수 API에서는 더 이상 유효하지 않아야 한다.
+        // 인증 필수 API의 로그아웃 Access Token 거부 검증
         ResponseEntity<String> rejected = http.exchange("/api/members/me",
                 HttpMethod.GET, new HttpEntity<>(authorization), String.class);
         assertThat(rejected.getStatusCode()).isEqualTo(UNAUTHORIZED);

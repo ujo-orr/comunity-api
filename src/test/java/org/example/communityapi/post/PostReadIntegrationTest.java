@@ -232,7 +232,7 @@ class PostReadIntegrationTest {
     void editingPreviouslyLoadedPostDoesNotOverwriteViewCount() {
         new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
             var loaded = posts.findById(postIds.getFirst()).orElseThrow();
-            // 다른 요청이 조회수를 올려도 수정할 때 덮어쓰면 안 된다.
+            // 게시글 수정 시 다른 요청의 조회수 증가분 보존 검증
             jdbc.update("update posts set view_count = view_count + 1 where id = ?", loaded.getId());
             loaded.updatePost("edited", "edited body", category);
         });

@@ -18,7 +18,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
-// S3 업로드 후 DB 트랜잭션이 실패했을 때 남는 오래된 객체를 정리
+// S3 업로드 후 DB 트랜잭션 실패로 남은 오래된 객체 정리
 @Slf4j
 @Service
 @Profile("prod")

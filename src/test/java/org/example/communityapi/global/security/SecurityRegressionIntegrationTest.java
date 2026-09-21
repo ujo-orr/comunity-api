@@ -58,6 +58,34 @@ class SecurityRegressionIntegrationTest {
     }
 
     @Test
+    void signupLoginReissueAndLogoutUseExistingControllerFlow() throws Exception {
+        mvc.perform(post("/api/members/signup").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"publicflow@test.com","password":"Password1!",
+                                 "phoneNumber":"01012345678","nickname":"공개가입"}
+                                """))
+                .andExpect(status().isCreated());
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        var login = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"publicflow@test.com\",\"password\":\"Password1!\"}"))
+                .andExpect(status().isOk()).andReturn();
+        String refresh = mapper.readTree(login.getResponse().getContentAsString()).get("refreshToken").asText();
+        var reissue = mvc.perform(post("/api/auth/reissue").contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(java.util.Map.of("refreshToken", refresh))))
+                .andExpect(status().isOk()).andReturn();
+        String access = mapper.readTree(reissue.getResponse().getContentAsString()).get("accessToken").asText();
+        mvc.perform(post("/api/auth/reissue").contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(java.util.Map.of("refreshToken", refresh))))
+                .andExpect(status().isUnauthorized()).andExpect(jsonPath("code").value("A002"));
+        mvc.perform(post("/api/auth/logout").header("Authorization", "Bearer " + access))
+                .andExpect(status().isOk());
+        assertThat(refreshTokens.findByEmail("publicflow@test.com")).isEmpty();
+        org.mockito.Mockito.verify(valueOperations).set(org.mockito.ArgumentMatchers.eq(access),
+                org.mockito.ArgumentMatchers.eq("logout"), org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.eq(java.util.concurrent.TimeUnit.MILLISECONDS));
+    }
+
+    @Test
     void refreshTokenChangesEveryTimeAndCannotBeReused() {
         Member member = saveMember("rotate", Role.USER);
         String firstToken = authService.login(new MemberLoginRequest(member.getEmail(), PASSWORD)).refreshToken();
