@@ -6,11 +6,13 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.example.communityapi.member.admin.dto.AdminMemberResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@Validated
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
 public class AdminMemberController {
