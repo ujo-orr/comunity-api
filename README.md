@@ -9,6 +9,7 @@ Spring Boot 기반으로 구현한 **회원 인증 커뮤니티 REST API**입니
 프로젝트의 설계 과정과 문제 해결, 테스트, 배포 과정은 블로그에 정리했습니다.
 
 **Community API 개발 기록**
+
 https://ujo-orr.tistory.com/category/Side%20Project/Community%20API
 
 ## Tech Stack
