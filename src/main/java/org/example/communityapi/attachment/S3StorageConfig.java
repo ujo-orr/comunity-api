@@ -16,7 +16,7 @@ public class S3StorageConfig {
     @Bean(destroyMethod = "close")
     S3Client s3Client(@Value("${file.s3.region}") String region) {
         Assert.hasText(region, "AWS_REGION must not be blank");
-        // 기본 자격 증명 체인을 통한 EC2 IAM Role 임시 자격 증명 사용
+        // AWS SDK 기본 인증 설정으로 EC2 IAM Role 사용
         return S3Client.builder()
                 .region(Region.of(region))
                 .overrideConfiguration(config -> config

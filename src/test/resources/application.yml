@@ -1,5 +1,5 @@
 jwt:
-  # 실제 서버 사용 금지 테스트 전용 키 설정
+  # 테스트 전용 키. 실제 서버 사용 금지
   secret: test-secret-key-must-be-at-least-32-bytes-long
   access-expiration-ms: 3600000
   refresh-expiration-ms: 1209600000

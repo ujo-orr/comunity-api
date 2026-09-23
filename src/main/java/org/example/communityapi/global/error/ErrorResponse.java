@@ -41,7 +41,7 @@ public class ErrorResponse {
         private final String value;
         private final String reason;
 
-        // 비밀번호 및 토큰 노출 방지를 위한 응답 입력값 제외
+        // 비밀번호·토큰 노출 방지를 위해 응답에서 입력값 제외
         public static List<FieldErrorDetail> of(BindingResult bindingResult) {
             return bindingResult.getFieldErrors().stream()
                     .map(error -> FieldErrorDetail.builder()

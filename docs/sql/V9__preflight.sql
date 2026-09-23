@@ -1,5 +1,5 @@
--- 읽기 전용 사전 점검. 첫 네 조회의 결과가 0행이어야 V9를 적용할 수 있다.
--- 전화번호 비교는 UNIQUE 인덱스와 동일한 DB collation을 사용한다.
+-- V9 적용 전 데이터 확인용 조회. 첫 4개 조회 결과가 모두 0행이면 적용 가능
+-- 전화번호 중복 확인 시 DB의 UNIQUE 제약조건과 같은 비교 기준 사용
 SELECT phone_number, COUNT(*) AS duplicate_count
 FROM members
 GROUP BY phone_number
@@ -18,7 +18,7 @@ SELECT id, role
 FROM member_withdrawal
 WHERE CAST(role AS BINARY) NOT IN ('USER', 'ADMIN', 'SUPERADMIN');
 
--- 아래 결과는 V9 적용을 막지는 않지만 과거 탈퇴 계정 복구 시 확인이 필요하다.
+-- 아래 결과는 V9 적용 가능 여부와 무관. 탈퇴 계정 복구 시 별도 확인 필요
 SELECT id, email, phone_number
 FROM member_withdrawal
 WHERE CHAR_LENGTH(email) > 30 OR phone_number IS NULL;

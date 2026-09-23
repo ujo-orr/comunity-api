@@ -1,4 +1,4 @@
-# 운영에서는 prod profile만 활성화한다.
+# 운영 환경은 prod 프로필만 사용
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver

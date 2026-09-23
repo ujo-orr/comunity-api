@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.TimeZone;
 
-// 자체 JWT 인증 사용에 따른 기본 사용자 자동설정 제외
+// JWT 인증 사용으로 기본 사용자 자동 생성 제외
 @SpringBootApplication(exclude = UserDetailsServiceAutoConfiguration.class)
 @EnableScheduling
 

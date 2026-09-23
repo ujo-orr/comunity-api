@@ -8,7 +8,7 @@ group = 'org.example'
 version = '0.0.1-SNAPSHOT'
 description = 'community-api'
 
-// 파일 업로드 보안 수정 포함 Tomcat 버전 설정
+// 파일 업로드 보안 패치가 적용된 Tomcat 버전 사용
 ext['tomcat.version'] = '10.1.60'
 
 java {
@@ -43,7 +43,7 @@ dependencies {
     runtimeOnly 'com.mysql:mysql-connector-j'
     runtimeOnly 'com.h2database:h2'
 
-    // 첨부파일 저장용 AWS SDK v2 S3 모듈 설정
+    // S3 첨부파일 저장용 AWS SDK 추가
     implementation 'software.amazon.awssdk:s3:2.54.17'
 
     // 로그아웃한 토큰 보관

@@ -211,7 +211,7 @@ abstract class MemberSchemaContract {
 
     private void assertCheckViolation(org.assertj.core.api.ThrowableAssert.ThrowingCallable statement) {
         String database = jdbc.execute((ConnectionCallback<String>) connection -> connection.getMetaData().getDatabaseProductName());
-        // MySQL CHECK 위반은 HY000/3819, H2는 23513으로 전달된다.
+        // CHECK 제약조건 위반 코드: MySQL HY000/3819, H2 23513
         boolean mysql = "MySQL".equals(database);
         assertThatThrownBy(statement).isInstanceOf(DataAccessException.class)
                 .rootCause().isInstanceOfSatisfying(SQLException.class, exception -> {

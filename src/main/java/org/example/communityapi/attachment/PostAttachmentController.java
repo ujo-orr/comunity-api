@@ -46,7 +46,7 @@ public class PostAttachmentController {
     @GetMapping("/{attachmentId}/download")
     public ResponseEntity<Resource> download(@Positive @PathVariable Long postId, @Positive @PathVariable Long attachmentId) {
         PostAttachmentService.DownloadedAttachment downloaded = attachmentService.download(postId, attachmentId);
-        // 업로드 파일의 브라우저 실행 방지를 위한 다운로드 응답 설정
+        // 파일이 브라우저에서 실행되지 않도록 다운로드 응답 설정
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .contentLength(downloaded.attachment().getFileSize())

@@ -44,7 +44,7 @@ public class S3AttachmentStorage implements AttachmentStorage {
                     RequestBody.fromInputStream(input, file.getSize()));
             return key;
         } catch (IOException | SdkException e) {
-            // 응답 유실 등 업로드 결과 불명확 시 저장 객체 정리 시도
+            // 업로드 오류 시 S3에 파일이 남아 있을 수 있어 삭제 시도
             deleteQuietly(key);
             throw new BusinessException(ErrorCode.FILE_STORAGE_ERROR, e);
         }
@@ -53,7 +53,7 @@ public class S3AttachmentStorage implements AttachmentStorage {
     @Override
     public Resource load(String storageKey) {
         try {
-            // 최대 파일 크기(10MB) 내 버퍼링을 통한 응답 전 S3 오류 처리
+            // 응답 전에 S3 오류를 확인하도록 파일 전체 읽기(최대 10MB)
             return new ByteArrayResource(s3.getObjectAsBytes(GetObjectRequest.builder()
                     .bucket(bucket).key(storageKey).build()).asByteArray());
         } catch (S3Exception e) {
@@ -71,7 +71,7 @@ public class S3AttachmentStorage implements AttachmentStorage {
         try {
             s3.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(storageKey).build());
         } catch (SdkException e) {
-            // DB 커밋 및 원래 예외 보존을 위한 로컬 저장소 동일 best-effort 정책 적용
+            // 기존 처리에 영향을 주지 않도록 파일 삭제 실패는 로그만 기록
             log.error("Failed to delete S3 attachment: {}", storageKey, e);
         }
     }

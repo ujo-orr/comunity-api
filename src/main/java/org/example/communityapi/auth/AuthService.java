@@ -118,7 +118,7 @@ public class AuthService {
         refreshTokenRepository.deleteByEmail(email);
 
         long expiration = jwtTokenProvider.getExpiration(accessToken);
-        // 검증 직후 만료된 토큰은 다시 사용할 수 없으므로 blacklist에 저장할 필요가 없다.
+        // 이미 만료된 토큰은 블랙리스트 저장 생략
         if (expiration > 0) {
             stringRedisTemplate.opsForValue().set(
                     accessToken,

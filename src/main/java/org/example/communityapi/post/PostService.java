@@ -70,7 +70,7 @@ public class PostService {
             throw new BusinessException(ErrorCode.EMPTY_SEARCH_KEYWORD);
         }
 
-        // LIKE 특수문자의 원문 검색 처리
+        // 검색어의 %와 _를 일반 문자로 검색
         String escapedKeyword = keyword.strip()
                 .replace("!", "!!")
                 .replace("%", "!%")
@@ -109,7 +109,7 @@ public class PostService {
 
         post.validateWriter(email);
 
-        // 롤백 시 첨부파일 보존을 위한 DB 커밋 후 파일 삭제
+        // DB 변경이 확정된 뒤 첨부파일 삭제
         var storageKeys = attachmentRepository.findByPostId(id).stream()
                 .map(attachment -> attachment.getStorageKey())
                 .toList();

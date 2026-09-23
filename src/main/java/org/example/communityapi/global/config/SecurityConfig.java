@@ -38,7 +38,7 @@ public class SecurityConfig {
 
     @Bean
     public FilterRegistrationBean<JwtAuthenticationFilter> jwtFilterRegistration() {
-        // Security 체인 단독 실행을 위한 Servlet 필터 자동 등록 비활성화
+        // JWT 필터 중복 실행 방지를 위해 자동 등록 해제
         FilterRegistrationBean<JwtAuthenticationFilter> registration =
                 new FilterRegistrationBean<>(jwtAuthenticationFilter);
         registration.setEnabled(false);

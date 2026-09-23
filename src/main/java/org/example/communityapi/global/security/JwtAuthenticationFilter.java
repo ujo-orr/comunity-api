@@ -98,7 +98,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 동일 이메일 재가입 시 기존 토큰 사용 방지를 위한 회원 정보 검증
+        // 같은 이메일로 재가입한 경우 이전 토큰 사용 방지를 위해 회원 정보 확인
         Member member = memberRepository.findByEmail(email).orElse(null);
         if (member == null || member.getStatus() != MemberStatus.ACTIVE
                 || !memberId.equals(member.getId())

@@ -49,7 +49,7 @@ class ProdDeploymentDockerTest {
         registry.add("DB_PASSWORD", mysql::getPassword);
     }
 
-    // AWS 요청 제외 및 운영 빈 선택과 MySQL 마이그레이션 검증
+    // 실제 AWS 호출 없이 운영 설정과 MySQL 마이그레이션 확인
     @MockitoBean S3Client s3;
     @Autowired AttachmentStorage storage;
     @Autowired Environment environment;

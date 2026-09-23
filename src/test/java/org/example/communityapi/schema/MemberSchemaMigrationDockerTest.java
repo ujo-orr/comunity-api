@@ -71,7 +71,7 @@ class MemberSchemaMigrationDockerTest {
         var memberDdlBefore = jdbc.queryForMap("SHOW CREATE TABLE members");
         var withdrawalDdlBefore = jdbc.queryForMap("SHOW CREATE TABLE member_withdrawal");
 
-        // 비엄격 MySQL 설정에서도 사전 검사에 의해 긴 이메일을 잘라내지 않고 거부해야 한다.
+        // MySQL 엄격 모드가 꺼져 있어도 30자 초과 이메일의 마이그레이션 차단 확인
         var flyway = Flyway.configure().dataSource(dataSource).initSql("SET SESSION sql_mode = ''").load();
         assertThatThrownBy(flyway::migrate).isInstanceOf(FlywayException.class)
                 .hasStackTraceContaining("v9_requires_valid_member_data");

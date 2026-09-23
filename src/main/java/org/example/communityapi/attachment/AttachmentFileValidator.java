@@ -5,7 +5,7 @@ import org.example.communityapi.global.error.ErrorCode;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-// 로컬 및 S3 공통 업로드 정책 적용
+// 로컬·S3 업로드 파일의 공통 검사
 final class AttachmentFileValidator {
     private AttachmentFileValidator() {}
 

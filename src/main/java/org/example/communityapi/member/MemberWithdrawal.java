@@ -21,7 +21,7 @@ public class MemberWithdrawal extends BaseTimeEntity {
 
     private Long originalId;
 
-    // 탈퇴 이력은 기존 DB에 저장된 이메일도 보존하므로 회원가입 제한(30자)과 구분한다.
+    // 기존 이메일 보관을 위해 탈퇴 이력에는 회원가입 길이 제한(30자) 미적용
     @Column(nullable = false, length = 255)
     private String email;
 

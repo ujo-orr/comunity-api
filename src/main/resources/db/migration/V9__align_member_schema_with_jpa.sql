@@ -1,5 +1,5 @@
--- 적용 전 docs/sql/V9__preflight.sql로 기존 데이터 충돌을 확인한다.
--- 데이터는 자동 삭제/수정하지 않는다. 충돌이 있으면 영구 테이블 변경 전에 중단한다.
+-- 적용 전 docs/sql/V9__preflight.sql로 중복값과 잘못된 데이터 확인
+-- 문제 발견 시 기존 데이터 수정 없이 테이블 변경 중단
 CREATE TEMPORARY TABLE v9_member_schema_preflight (
     valid TINYINT NOT NULL,
     CONSTRAINT v9_requires_valid_member_data CHECK (valid = 1)
@@ -18,7 +18,7 @@ SELECT CASE WHEN
 
 DROP TEMPORARY TABLE v9_member_schema_preflight;
 
--- 길이 축소 도중 데이터가 잘리는 것을 방지한다. 기존 세션 설정은 성공 후 복원한다.
+-- 이메일 길이 변경 시 데이터 잘림 방지. 변경 성공 후 기존 설정 복원
 SET @v9_previous_sql_mode = @@SESSION.sql_mode;
 SET SESSION sql_mode = CONCAT_WS(',', @@SESSION.sql_mode, 'STRICT_ALL_TABLES');
 
