@@ -26,6 +26,7 @@ out/
 .DS_Store
 *.env
 .env.*
+!.env.example
 application-secret.yml
 application-secret.yaml
 uploads/
