@@ -4,7 +4,12 @@ Spring Boot 기반으로 구현한 **회원 인증 커뮤니티 REST API**입니
 
 단순 CRUD 구현을 넘어 JWT 인증·인가, Redis를 이용한 토큰 무효화, 파일 저장소, 예외 처리, 동시성, 테스트와 AWS 배포까지 백엔드 애플리케이션의 전체 흐름을 경험하는 것을 목표로 진행했습니다.
 
-*https://ujo-orr.tistory.com/category/Side%20Project/Community%20API*
+## 개발 기록
+
+프로젝트의 설계 과정과 문제 해결, 테스트, 배포 과정은 블로그에 정리했습니다.
+
+**Community API 개발 기록**
+https://ujo-orr.tistory.com/category/Side%20Project/Community%20API
 
 ## Tech Stack
 
